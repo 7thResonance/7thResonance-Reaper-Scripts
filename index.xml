@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="791c1739836a97aa0e29f3d48057b5f5fa244413">
+<index version="1" name="7thResonance's Reaper Scripts" commit="eb6611b7a3e1a3871afa8fc33923b42875b7432d">
   <category name="Example">
     <reapack name="cfillion_Hello world.lua" type="script" desc="Hello world">
       <metadata>
@@ -18,6 +18,26 @@ Markdown
       </metadata>
       <version name="1.0" author="cfillion" time="2021-01-04T23:30:32Z">
         <source main="main">https://github.com/cfillion/reapack-repository-template/raw/58a3e39ba95bd0f35846aa1f39aa4cb2574295e1/Example/cfillion_Hello%20world.lua</source>
+      </version>
+    </reapack>
+    <reapack name="MIDI AutoSend.lua" type="script" desc="7R MIDI Auto Send for CC Feedback">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 MIDI Auto Send\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Original Script made by Heda. This script allows to send MIDI back to hardware faders. (assuming it supports midi receives and motorised faders positioning themselves)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Creates a MIDI Send from selected track to "Hardware Feedback Track" Auto Creates track when script is first ran.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Save the track as part of the default template with the appropriate filters and hardware send. Disable master send of the hardware feedback track.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Does not create send if its a Folder.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab has a delay of 500 ms to create a send.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Need track selection undo points.\sa180\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.1" author="7thResonance" time="2025-05-19T09:54:29Z">
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/eb6611b7a3e1a3871afa8fc33923b42875b7432d/Example/MIDI%20AutoSend.lua</source>
       </version>
     </reapack>
   </category>
