@@ -1,6 +1,8 @@
 @description 7R MIDI Auto Send for CC Feedback
 @author 7thResonance
-@version 1.1
+@version 1.2
+@changelog
+  Absolutily nothing has been changed lmao. Just testing this
 @about
   MIDI Auto Send
 
