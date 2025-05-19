@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="88b145eb36d307325a181bb2329742556a3fc079">
+<index version="1" name="7thResonance's Reaper Scripts" commit="b893e888429e03d402520e42f11618604d0e00ba">
   <category name="Utilities">
     <reapack name="MIDI AutoSend.lua" type="script" desc="7R MIDI Auto Send for CC Feedback">
       <metadata>
@@ -27,6 +27,11 @@
       <version name="1.3" author="7thResonance" time="2025-05-19T11:07:51Z">
         <changelog><![CDATA[Absolutily nothing has been changed again. ]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/88b145eb36d307325a181bb2329742556a3fc079/Utilities/MIDI%20AutoSend.lua</source>
+      </version>
+      <version name="1.4" author="7thResonance" time="2025-05-19T11:44:32Z">
+        <changelog><![CDATA[Delay of 500 ms.
+Doesnt create send if folder.]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/e77d670ccea994b8e056c8f02c30a9dee9795915/Utilities/MIDI%20AutoSend.lua</source>
       </version>
     </reapack>
   </category>
