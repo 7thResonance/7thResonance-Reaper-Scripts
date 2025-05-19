@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="4e56b8a25262f439b5ab287fa86a8c4842c305ff">
+<index version="1" name="7thResonance's Reaper Scripts" commit="f5e6d1a8f1f4ba96907214dc4ca0748dcdffcd23">
   <category name="Utilities">
     <reapack name="7R MIDI AutoSend.lua" type="script" desc="7R MIDI Auto Send for CC Feedback">
       <metadata>
@@ -8,12 +8,6 @@
 \widowctrl\hyphauto
 
 {\pard \ql \f0 \sa180 \li0 \fi0 MIDI Auto Send\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Original Script made by Heda. This script allows to send MIDI back to hardware faders. (assuming it supports midi receives and motorised faders positioning themselves)\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Creates a MIDI Send from selected track to "Hardware Feedback Track" Auto Creates track when script is first ran.\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Save the track as part of the default template with the appropriate filters and hardware send. Disable master send of the hardware feedback track.\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Does not create send if its a Folder.\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab has a delay of 500 ms to create a send.\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Need track selection undo points.\sa180\par}
 }
 ]]></description>
       </metadata>
