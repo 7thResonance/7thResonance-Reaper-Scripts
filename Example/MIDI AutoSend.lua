@@ -1,3 +1,21 @@
+@description 7R MIDI Auto Send for CC Feedback
+@author 7thResonance
+@version 1.1
+@about
+  MIDI Auto Send
+
+  Original Script made by Heda. This script allows to send MIDI back to hardware faders. (assuming it supports midi receives and motorised faders positioning themselves)
+
+  Creates a MIDI Send from selected track to "Hardware Feedback Track"
+  Auto Creates track when script is first ran.
+
+  Save the track as part of the default template with the appropriate filters and hardware send. 
+  Disable master send of the hardware feedback track.
+
+  - Does not create send if its a Folder.
+  - has a delay of 500 ms to create a send.
+  - Need track selection undo points.
+
 -- Function to check or create "Hardware Feedback Track" in the current project
 function ensureHardwareFeedbackTrack()
     local feedbackTrack
