@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="f5e6d1a8f1f4ba96907214dc4ca0748dcdffcd23">
+<index version="1" name="7thResonance's Reaper Scripts" commit="0369b460a1012fa78712b1865d20c7e4d25d8ee7">
   <category name="Utilities">
+    <reapack name="7R Insert Project or Take Marker at mouse pointer.lua" type="script" desc="7R Insert Project/Take Marker at mouse pointer">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Allows to add markers on items themselves or the ruler (project markers), just point and press shortcut!\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="7thResonance" time="2025-05-19T13:09:00Z">
+        <changelog><![CDATA[Initial]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/0369b460a1012fa78712b1865d20c7e4d25d8ee7/Utilities/7R%20Insert%20Project%20or%20Take%20Marker%20at%20mouse%20pointer.lua</source>
+      </version>
+    </reapack>
     <reapack name="7R MIDI AutoSend.lua" type="script" desc="7R MIDI Auto Send for CC Feedback">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
