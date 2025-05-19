@@ -1,9 +1,9 @@
 @description 7R MIDI Auto Send for CC Feedback
 @author 7thResonance
--- @version 1.1
--- @changelog
---   Delay of 500 ms.
---   Doesnt create send if folder.
+@version 1.1
+@changelog
+  Delay of 500 ms.
+  Doesnt create send if folder.
 @about
   MIDI Auto Send
 
