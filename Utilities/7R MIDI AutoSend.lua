@@ -4,6 +4,7 @@
 -- @changelog
 --  Delay of 500 ms.
 --  Doesnt create send if folder.
+-- @link Youtube Video https://www.youtube.com/watch?v=u1325Y-tJZQ
 -- @about
 --  MIDI Auto Send
 
