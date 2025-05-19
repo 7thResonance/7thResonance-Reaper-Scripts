@@ -1,23 +1,7 @@
-# ReaPack Repository Template
+Scripts are made by 7thResonance, Composer, Producer and mix engineer.
 
-A template for GitHub-hosted ReaPack repositories with automated
-[reapack-index](https://github.com/cfillion/reapack-index)
-running from GitHub Actions.
+I am not a programmer, i modify scripts with very little knowledge and with the help of AI.
 
-Replace the name of the repository in [index.xml](/index.xml) when using this template.
-This will be the name shown in ReaPack.
+This only exists so that other people can make use of it.
 
-```xml
-<index version="1" name="Name of your repository here">
-```
-
-Replace the contents of this file ([README.md](/README.md)).
-This will be the text shown when using ReaPack's "About this repository" feature.
-
-reapack-index looks for package files in subfolders.
-The folder tree represents the package categories shown in ReaPack.
-
-Each package file is expected to begin with a metadata header.
-See [Packaging Documentation](https://github.com/cfillion/reapack-index/wiki/Packaging-Documentation) on reapack-index's wiki.
-
-The URL to import in ReaPack is [https://github.com/`<your username>`/`<repository name>`/raw/master/index.xml](https://github.com/cfillion/reapack-repository-template/raw/master/index.xml).
+Check out my Music if you wanna hear some orchestral bs. 7thResonance on Spotify
