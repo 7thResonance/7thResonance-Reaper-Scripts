@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="0369b460a1012fa78712b1865d20c7e4d25d8ee7">
+<index version="1" name="7thResonance's Reaper Scripts" commit="51ae88d80a6cd9214d267b7c346fdad77e1d71bd">
   <category name="Utilities">
     <reapack name="7R Insert Project or Take Marker at mouse pointer.lua" type="script" desc="7R Insert Project/Take Marker at mouse pointer">
       <metadata>
@@ -25,6 +25,7 @@
 {\pard \ql \f0 \sa180 \li0 \fi0 MIDI Auto Send\par}
 }
 ]]></description>
+        <link rel="website" href="https://www.youtube.com/watch?v=u1325Y-tJZQ">Youtube Video</link>
       </metadata>
       <version name="1.4" author="7thResonance" time="2025-05-19T11:50:52Z">
         <changelog><![CDATA[Delay of 500 ms.
