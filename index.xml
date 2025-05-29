@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="51ae88d80a6cd9214d267b7c346fdad77e1d71bd">
+<index version="1" name="7thResonance's Reaper Scripts" commit="39996be4e4012ee99552503c6ee42d1bffe0c01a">
+  <category name="Track">
+    <reapack name="7R Freeze Instruments to Stereo (Other FX Online).lua" type="script" desc="7R Freeze Instruments to Stereo (Other FX Online)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Freezes Selected tracks. up to Instrument, Other FX are brough online after freezing.\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="7thResonance" time="2025-05-29T02:08:27Z">
+        <changelog><![CDATA[Initial]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/39996be4e4012ee99552503c6ee42d1bffe0c01a/Track/7R%20Freeze%20Instruments%20to%20Stereo%20(Other%20FX%20Online).lua</source>
+      </version>
+    </reapack>
+  </category>
   <category name="Utilities">
     <reapack name="7R Insert Project or Take Marker at mouse pointer.lua" type="script" desc="7R Insert Project/Take Marker at mouse pointer">
       <metadata>
