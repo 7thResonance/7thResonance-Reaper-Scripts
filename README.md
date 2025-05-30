@@ -15,6 +15,6 @@ Discord: https://discord.com/invite/Y7MWJgB4mc
 
 Scripts;
 
-Auto send MIDI - Send seelcted track's CC to a track which can be sent back to otorized faders.
+Auto send MIDI - Send seelcted track's CC to a track which can be sent back to motorized faders.
 Insert Markers - Based on mousepointer. Either on the ruler,or on the item itself
 Freeze Instrument - Auto bypass FX and only freeze Instruments
