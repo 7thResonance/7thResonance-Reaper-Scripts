@@ -65,9 +65,12 @@ Doesnt create send if folder.]]></changelog>
 {\pard \ql \f0 \sa180 \li0 \fi0 This only exists so that other people can make use of it.\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Check out my Music if you wanna hear some orchestral bs. 7thResonance on Spotify\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 If any issues, i can try and fix them. Either post on githib, Reaper forums page or Discord\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Github: https://github.com/7thResonance/7thResonance-Reaper-Scripts Discord: https://discord.com/invite/Y7MWJgB4mc\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Github: https://github.com/7thResonance/7thResonance-Reaper-Scripts\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Discord: https://discord.com/invite/Y7MWJgB4mc\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Scripts;\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Auto send MIDI - Send seelcted track's CC to a track which can be sent back to motorized faders. Insert Markers - Based on mousepointer. Either on the ruler,or on the item itself Freeze Instrument - Auto bypass FX and only freeze Instruments\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Auto send MIDI - Send seelcted track's CC to a track which can be sent back to motorized faders.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Insert Markers - Based on mousepointer. Either on the ruler,or on the item itself.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Freeze Instrument - Auto bypass FX and only freeze Instruments.\par}
 }
 ]]></description>
   </metadata>
