@@ -21,3 +21,5 @@ Auto send MIDI - Send seelcted track's CC to a track which can be sent back to m
 Insert Markers - Based on mousepointer. Either on the ruler,or on the item itself.
 
 Freeze Instrument - Auto bypass FX and only freeze Instruments.
+
+Insert FX Based on Selection - Open add FX window based on the mouse cursor postition (Track or Items)
