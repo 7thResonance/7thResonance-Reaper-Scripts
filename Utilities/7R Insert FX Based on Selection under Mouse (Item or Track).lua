@@ -4,6 +4,9 @@
 @version 1.0
 @changelog Initial
 @about Opens add FX insert for track or item under cursor
+
+Known Limitation: If item fx already exists, it only shows Take FX chain window
+If mouse is on master, it shows FX Broswer
 --]]
 
 -- Function to open FX insert window for item or track under mouse cursor
