@@ -1,12 +1,14 @@
 --[[
 @description 7R Control Send volume of Selected Track
 @author 7thResonance
-@version 1.0
-@changelog Initial
+@version 1.1
+@changelog consoldidated undo points
 @about When mulltiple tracks are selected, can change the relative volume of the send over those tracks.
 
 due to my lack of knowledge, or limitation of API (i wouldnt know lmao) 
-alt key is the temporary override button, but you have to press it before dragging the mouse and it will stay active untill the mouse is released
+alt key is the temporary override button, but you have to press it before dragging the mouse and it will stay active untill the mouse is released.
+
+Known issues; Undo doesnt work properly, have to undo untill track seletion changes for intial values to be restored. (idk how to fix this)
 --]]
 
 -- Function to convert linear volume to dB
@@ -60,6 +62,8 @@ function Main()
     local track_sends = StoreSendVolumes()
     local last_sel_count = reaper.CountSelectedTracks(0)
     local alt_latched = false
+    local mouse_was_down = false
+    local changes_during_drag = {}
 
     local function GetAltAndMouseState()
         local alt_held = false
@@ -122,34 +126,47 @@ function Main()
         end
 
         -- Apply volume changes to matching sends on other selected tracks
-        if #changes > 0 then
-            if not alt_latched then
-                reaper.Undo_BeginBlock()
-                for _, change in ipairs(changes) do
-                    local target_send_name = change.send_name
-                    local vol_change_db = change.vol_change_db
-                    local changed_track = change.track
+        if #changes > 0 and not alt_latched then
+            for _, change in ipairs(changes) do
+                local target_send_name = change.send_name
+                local vol_change_db = change.vol_change_db
+                local changed_track = change.track
 
-                    for i = 0, sel_track_count - 1 do
-                        local track = reaper.GetSelectedTrack(0, i)
-                        if track ~= changed_track then
-                            local has_send, send_idx = HasSendWithName(track, target_send_name)
-                            if has_send then
-                                local current_vol = reaper.GetTrackSendInfo_Value(track, 0, send_idx, "D_VOL")
-                                local current_vol_db = LinearToDB(current_vol)
-                                local new_vol_db = current_vol_db + vol_change_db
-                                local new_vol = DBToLinear(new_vol_db)
-                                reaper.SetTrackSendInfo_Value(track, 0, send_idx, "D_VOL", new_vol)
-                            end
+                for i = 0, sel_track_count - 1 do
+                    local track = reaper.GetSelectedTrack(0, i)
+                    if track ~= changed_track then
+                        local has_send, send_idx = HasSendWithName(track, target_send_name)
+                        if has_send then
+                            local current_vol = reaper.GetTrackSendInfo_Value(track, 0, send_idx, "D_VOL")
+                            local current_vol_db = LinearToDB(current_vol)
+                            local new_vol_db = current_vol_db + vol_change_db
+                            local new_vol = DBToLinear(new_vol_db)
+                            reaper.SetTrackSendInfo_Value(track, 0, send_idx, "D_VOL", new_vol)
+                            -- Store change for undo consolidation
+                            table.insert(changes_during_drag, {
+                                track = track,
+                                send_idx = send_idx,
+                                send_name = target_send_name,
+                                vol_change_db = vol_change_db
+                            })
                         end
                     end
                 end
-                reaper.Undo_EndBlock("Adjust send volumes across selected tracks", -1)
             end
-
-            -- Always update stored send volumes
+            -- Update stored send volumes
             track_sends = StoreSendVolumes()
         end
+
+        -- Create undo block only when mouse is released after changes
+        if mouse_was_down and not mouse_down and #changes_during_drag > 0 then
+            reaper.Undo_BeginBlock()
+            -- No need to re-apply changes; just create the undo point
+            reaper.Undo_EndBlock("Adjust send volumes across selected tracks", -1)
+            changes_during_drag = {} -- Clear changes after creating undo point
+        end
+
+        -- Update mouse state
+        mouse_was_down = mouse_down
 
         -- Continue monitoring
         reaper.defer(CheckAndUpdate)
