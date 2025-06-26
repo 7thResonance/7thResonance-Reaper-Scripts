@@ -23,3 +23,5 @@ Insert Markers - Based on mousepointer. Either on the ruler,or on the item itsel
 Freeze Instrument - Auto bypass FX and only freeze Instruments.
 
 Insert FX Based on Selection - Open add FX window based on the mouse cursor postition (Track or Items)
+
+Control Sends of Selected Track - Allows to control send volume of many tracks at once
