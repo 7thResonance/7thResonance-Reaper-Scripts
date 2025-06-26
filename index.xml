@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="9e72fd6cf3e09a7776b04b3afb051bb1a896d3fd">
+<index version="1" name="7thResonance's Reaper Scripts" commit="48de29ff8fe01b7d34128dda4c426bae6efc4312">
   <category name="Track">
+    <reapack name="7R Control Sends of Selected Track.lua" type="script" desc="7R Control Send volume of Selected Track">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 When mulltiple tracks are selected, can change the relative volume of the send over those tracks.\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="7thResonance" time="2025-06-26T14:39:10Z">
+        <changelog><![CDATA[Initial]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/48de29ff8fe01b7d34128dda4c426bae6efc4312/Track/7R%20Control%20Sends%20of%20Selected%20Track.lua</source>
+      </version>
+    </reapack>
     <reapack name="7R Freeze Instruments to Stereo (Other FX Online).lua" type="script" desc="7R Freeze Instruments to Stereo (Other FX Online)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -87,6 +102,7 @@ Doesnt create send if folder.]]></changelog>
 {\pard \ql \f0 \sa180 \li0 \fi0 Insert Markers - Based on mousepointer. Either on the ruler,or on the item itself.\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Freeze Instrument - Auto bypass FX and only freeze Instruments.\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Insert FX Based on Selection - Open add FX window based on the mouse cursor postition (Track or Items)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Control Sends of Selected Track - Allows to control send volume of many tracks at once\par}
 }
 ]]></description>
   </metadata>
