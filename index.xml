@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="6a0c2f351a7ee73061185626bde10dec93ce1c00">
+<index version="1" name="7thResonance's Reaper Scripts" commit="80aa776e9e64eed909af2fafcac0f1ede62d73ff">
   <category name="Track">
+    <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds [Frozen] to Frozen Track's Name">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Adds " [Frozen]" to Frozen Track's Name. Removes it when unfrozen. SWS is needed.\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="7thResonance" time="2025-07-01T23:43:31Z">
+        <changelog><![CDATA[initial]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/80aa776e9e64eed909af2fafcac0f1ede62d73ff/Track/7R%20Adds%20%5BFrozen%5D%20to%20Frozen%20Track's%20Name.lua</source>
+      </version>
+    </reapack>
     <reapack name="7R Control Sends of Selected Track.lua" type="script" desc="7R Control Send volume of Selected Track">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
