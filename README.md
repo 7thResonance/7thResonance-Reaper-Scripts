@@ -25,3 +25,5 @@ Freeze Instrument - Auto bypass FX and only freeze Instruments.
 Insert FX Based on Selection - Open add FX window based on the mouse cursor postition (Track or Items)
 
 Control Sends of Selected Track - Allows to control send volume of many tracks at once
+
+Adds [Frozen] to Frozen Track's Name - Add ' [Frozen] to Frozen tracks, removes it when thawed
