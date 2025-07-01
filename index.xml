@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="48de29ff8fe01b7d34128dda4c426bae6efc4312">
+<index version="1" name="7thResonance's Reaper Scripts" commit="6a0c2f351a7ee73061185626bde10dec93ce1c00">
   <category name="Track">
     <reapack name="7R Control Sends of Selected Track.lua" type="script" desc="7R Control Send volume of Selected Track">
       <metadata>
@@ -14,6 +14,10 @@
       <version name="1.0" author="7thResonance" time="2025-06-26T14:39:10Z">
         <changelog><![CDATA[Initial]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/48de29ff8fe01b7d34128dda4c426bae6efc4312/Track/7R%20Control%20Sends%20of%20Selected%20Track.lua</source>
+      </version>
+      <version name="1.1" author="7thResonance" time="2025-06-26T15:05:37Z">
+        <changelog><![CDATA[consoldidated undo points]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/6a0c2f351a7ee73061185626bde10dec93ce1c00/Track/7R%20Control%20Sends%20of%20Selected%20Track.lua</source>
       </version>
     </reapack>
     <reapack name="7R Freeze Instruments to Stereo (Other FX Online).lua" type="script" desc="7R Freeze Instruments to Stereo (Other FX Online)">
