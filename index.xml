@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="ab766b8e35d45a0a6ba59e7ffccc88ba515a847f">
+<index version="1" name="7thResonance's Reaper Scripts" commit="e908500f648b7a28212afa5bccadc202ed7376f9">
+  <category name="Project">
+    <reapack name="7R Project Time Tracker (GUI).lua" type="script">
+      <version name="1.0" time="2025-07-02T20:18:39Z">
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/e908500f648b7a28212afa5bccadc202ed7376f9/Project/7R%20Project%20Time%20Tracker%20(GUI).lua</source>
+      </version>
+    </reapack>
+  </category>
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds [Frozen] to Frozen Track's Name">
       <metadata>
