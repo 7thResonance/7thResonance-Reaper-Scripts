@@ -8,6 +8,7 @@ Check out my Music if you wanna hear some orchestral bs. 7thResonance on Spotify
 
 If any issues, i can try and fix them. Either post on githib, Reaper forums page or Discord
 
+Reapack Repository URL: https://raw.githubusercontent.com/7thResonance/7thResonance-Reaper-Scripts/refs/heads/master/index.xml
 
 Github: https://github.com/7thResonance/7thResonance-Reaper-Scripts
 
