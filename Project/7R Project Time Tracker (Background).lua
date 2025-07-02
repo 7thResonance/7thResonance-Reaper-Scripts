@@ -3,7 +3,7 @@
 @author 7thResonance
 @version 1.0
 @changelog initial
-@provides '7R Project Time Tracker (Background).lua'/'7R Project Time Tracker (GUI).lua'
+@provides 7R Project Time Tracker (GUI).lua
 @about Simplified Project time tracker. Original script made by Archie. Add Background script to autostart
 --]]
 
