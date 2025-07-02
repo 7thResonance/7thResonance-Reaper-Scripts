@@ -1,26 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="69d57914ec6749d74bd3e56bec420637ddcb8b10">
-  <category name="Project">
-    <reapack name="7R Project Time Tracker (Background).lua" type="script">
-      <version name="1.0" time="2025-07-02T21:02:21Z">
-        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/69d57914ec6749d74bd3e56bec420637ddcb8b10/Project/7R%20Project%20Time%20Tracker%20(Background).lua</source>
-      </version>
-    </reapack>
-    <reapack name="7R Project Time Tracker (GUI).lua" type="script" desc="7R Project Time Tracker">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Simplified Project time tracker. Original script made by Archie. Add Background script to autostart\par}
-}
-]]></description>
-      </metadata>
-      <version name="1.0" time="2025-07-02T20:18:39Z">
-        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/e908500f648b7a28212afa5bccadc202ed7376f9/Project/7R%20Project%20Time%20Tracker%20(GUI).lua</source>
-      </version>
-    </reapack>
-  </category>
+<index version="1" name="7thResonance's Reaper Scripts" commit="0af3c5923adb4039b4d4c79fc7d8f37646b7087f">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds [Frozen] to Frozen Track's Name">
       <metadata>
