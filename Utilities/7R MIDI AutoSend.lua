@@ -2,11 +2,9 @@
 @description 7R MIDI Auto Send for CC Feedback
 @author 7thResonance
 @version 1.5
-@changelog
-- If no midi item is detected, wont create send
+@changelog - If no midi item is detected, wont create send
 @link Youtube Video https://www.youtube.com/watch?v=u1325Y-tJZQ
-@about
-MIDI Auto Send from selected track to Specific track
+@about MIDI Auto Send from selected track to Specific track
 
 Original Script made by Heda. This script allows to send MIDI back to hardware faders. (assuming it supports midi receives and motorised faders positioning themselves)
 
