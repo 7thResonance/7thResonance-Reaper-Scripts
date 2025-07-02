@@ -1,4 +1,3 @@
--- @noindex
 -- @version 1.0
 
 -- REAPER Project Timer (background tracker, AFK detection: mouse, track, [envelope if available], cursor, playback)
