@@ -1,65 +1,74 @@
 --[[
-@description 7R Adds [Frozen] to Frozen Track's Name
+@description 7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History
 @author 7thResonance
-@version 1.0
-@changelog initial
-@about Adds " [Frozen]" to Frozen Track's Name. Removes it when unfrozen. SWS is needed.
+@version 1.1
+@changelog Reacts to Undo History: adds [Frozen] when tracks are frozen, removes it when unfrozen. SWS required.
+@about Automatically appends or removes " [Frozen]" in track names when freeze/unfreeze actions are detected in the undo history.
 --]]
 
--- Function to check if a string ends with a specific suffix
+-- Check if string ends with given suffix
 function string.ends(String, End)
    return End == '' or string.sub(String, -string.len(End)) == End
 end
 
--- Function to process tracks and update names
-function process_tracks()
+-- Get current undo description
+function get_undo_desc()
+    local desc = reaper.Undo_CanUndo2(0)
+    if not desc then desc = "" end
+    return desc:lower()
+end
+
+-- Returns true if any track is currently frozen
+function track_is_frozen(track)
+    return reaper.BR_GetMediaTrackFreezeCount and reaper.BR_GetMediaTrackFreezeCount(track) > 0
+end
+
+-- Appends [Frozen] to frozen tracks' names if not already present
+function tag_frozen_tracks()
     local track_count = reaper.CountTracks(0)
-    
-    for i = 0, track_count - 1 do
+    for i = 0, track_count-1 do
         local track = reaper.GetTrack(0, i)
-        if track then
-            local _, track_name = reaper.GetTrackName(track)
-            local freeze_count = reaper.BR_GetMediaTrackFreezeCount and reaper.BR_GetMediaTrackFreezeCount(track) or 0
-            local is_frozen = freeze_count > 0
-            
-            -- If track is frozen and doesn't have the tag
-            if is_frozen and not string.ends(track_name, " [Frozen]") then
-                local new_name = track_name .. " [Frozen]"
-                reaper.GetSetMediaTrackInfo_String(track, "P_NAME", new_name, true)
-            -- If track is not frozen but has the tag
-            elseif not is_frozen and string.ends(track_name, " [Frozen]") then
-                local new_name = string.sub(track_name, 1, -10) -- Remove " [Frozen]"
-                reaper.GetSetMediaTrackInfo_String(track, "P_NAME", new_name, true)
-            end
+        local _, track_name = reaper.GetTrackName(track)
+        if track_is_frozen(track) and not string.ends(track_name, " [Frozen]") then
+            local new_name = track_name .. " [Frozen]"
+            reaper.GetSetMediaTrackInfo_String(track, "P_NAME", new_name, true)
         end
     end
 end
 
--- Function to get project state change count
-function get_project_change_count()
-    return reaper.GetProjectStateChangeCount(0)
+-- Removes [Frozen] from unfrozen tracks' names if present
+function untag_unfrozen_tracks()
+    local track_count = reaper.CountTracks(0)
+    for i = 0, track_count-1 do
+        local track = reaper.GetTrack(0, i)
+        local _, track_name = reaper.GetTrackName(track)
+        if not track_is_frozen(track) and string.ends(track_name, " [Frozen]") then
+            local new_name = string.sub(track_name, 1, -10)
+            reaper.GetSetMediaTrackInfo_String(track, "P_NAME", new_name, true)
+        end
+    end
 end
 
--- Main function to monitor track states
+-- Main state
+local last_undo_desc = get_undo_desc()
+
 function main()
-    local last_change_count = get_project_change_count()
-    local function check()
-        local current_change_count = get_project_change_count()
-        if current_change_count ~= last_change_count then
-            process_tracks()
-            last_change_count = current_change_count
+    local now_undo_desc = get_undo_desc()
+    if now_undo_desc ~= last_undo_desc then
+        -- Check for "freeze" or "unfreeze" (case-insensitive)
+        if now_undo_desc:find("freeze") and not now_undo_desc:find("unfreeze") then
+            tag_frozen_tracks()
+        elseif now_undo_desc:find("unfreeze") then
+            untag_unfrozen_tracks()
         end
-        reaper.defer(check)
+        last_undo_desc = now_undo_desc
     end
-    check()
+    reaper.defer(main)
 end
 
--- Manual trigger function for testing
-function manual_trigger()
-    process_tracks()
-end
-
--- Start the script if SWS is available
+-- SWS required for freeze state
 if reaper.BR_GetMediaTrackFreezeCount then
     main()
+else
+    reaper.ShowMessageBox("SWS extension is required for this script to work.", "Missing SWS", 0)
 end
