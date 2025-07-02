@@ -1,11 +1,5 @@
---[[
-@description 7R Project Time Tracker
-@author 7thResonance
-@version 1.0
-@changelog initial
-@provides 7R Project Time Tracker (GUI).lua
-@about Simplified Project time tracker. Original script made by Archie. Add Background script to autostart
---]]
+-- @noindex
+-- @version 1.0
 
 -- REAPER Project Timer (background tracker, AFK detection: mouse, track, [envelope if available], cursor, playback)
 local PROJ_KEY = "REAPERTIMER"
