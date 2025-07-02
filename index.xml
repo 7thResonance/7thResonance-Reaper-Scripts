@@ -1,19 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="0af3c5923adb4039b4d4c79fc7d8f37646b7087f">
+<index version="1" name="7thResonance's Reaper Scripts" commit="c704d6537c1ad02ee6d428ac3df88a0802d2823d">
   <category name="Track">
-    <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds [Frozen] to Frozen Track's Name">
+    <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Adds " [Frozen]" to Frozen Track's Name. Removes it when unfrozen. SWS is needed.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Automatically appends or removes " [Frozen]" in track names when freeze/unfreeze actions are detected in the undo history.\par}
 }
 ]]></description>
       </metadata>
       <version name="1.0" author="7thResonance" time="2025-07-01T23:43:31Z">
         <changelog><![CDATA[initial]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/80aa776e9e64eed909af2fafcac0f1ede62d73ff/Track/7R%20Adds%20%5BFrozen%5D%20to%20Frozen%20Track's%20Name.lua</source>
+      </version>
+      <version name="1.1" author="7thResonance" time="2025-07-02T23:49:49Z">
+        <changelog><![CDATA[Reacts to Undo History: adds [Frozen] when tracks are frozen, removes it when unfrozen. SWS required.]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/c704d6537c1ad02ee6d428ac3df88a0802d2823d/Track/7R%20Adds%20%5BFrozen%5D%20to%20Frozen%20Track's%20Name.lua</source>
       </version>
     </reapack>
     <reapack name="7R Control Sends of Selected Track.lua" type="script" desc="7R Control Send volume of Selected Track">
