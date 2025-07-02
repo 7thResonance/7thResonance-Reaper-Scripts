@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="d9de0b9575f99f5e9264cb4e8588f3e9b76784ee">
+<index version="1" name="7thResonance's Reaper Scripts" commit="69d57914ec6749d74bd3e56bec420637ddcb8b10">
   <category name="Project">
+    <reapack name="7R Project Time Tracker (Background).lua" type="script">
+      <version name="1.0" time="2025-07-02T21:02:21Z">
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/69d57914ec6749d74bd3e56bec420637ddcb8b10/Project/7R%20Project%20Time%20Tracker%20(Background).lua</source>
+      </version>
+    </reapack>
     <reapack name="7R Project Time Tracker (GUI).lua" type="script" desc="7R Project Time Tracker">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
