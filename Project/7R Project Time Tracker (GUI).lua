@@ -1,3 +1,7 @@
+--[[
+@version 1.0
+--]]
+
 -- REAPER Project Timer GUI (live display, AFK status, full window background)
 local WINDOW_TITLE = "REAPER Project Timer & Stats"
 local WIDTH, HEIGHT = 480, 440
