@@ -1,9 +1,9 @@
 --[[
-@description 7R Marker Exporter (Project/Take)
+@description 7R Marker n Region Exporter (Project/Take/Regions)
 @author 7thResonance
-@version 1.0
+@version 1.1
 @changelog Initial
-@about GUI for exporting project and take markers in vairious formats.
+@about GUI for exporting project n take markers and Regions in vairious formats.
 - HH:MM:SS
 - HH:MM:SS:MS
 - MM:SS Youtube timestamp style
@@ -21,7 +21,7 @@
 local reaper = reaper
 
 -- SETTINGS
-local SCRIPT_TITLE = "Export Project & Item Markers"
+local SCRIPT_TITLE = "Export Project Markers, Item Markers & Regions"
 
 -- REAIMGUI SETUP
 if not reaper.ImGui_CreateContext then
@@ -38,6 +38,11 @@ reaper.ImGui_Attach(ctx, font)
 local marker_time_format = 1 -- see format_options below
 local marker_numbering = true
 local item_marker_timebase = 1 -- 1:Item-Relative, 2:Project-Relative, 3:Source-Relative
+
+local region_len_fmt = 10 -- default to Bar:Beat
+local region_start_fmt = 10
+local region_end_fmt = 10
+local region_numbering = true
 
 local format_options = {
   "HH:MM:SS",
@@ -156,6 +161,32 @@ local function GetProjectMarkerSelection(time_sel_start, time_sel_end)
   return filtered
 end
 
+local function GetProjectRegionsFiltered(time_sel_start, time_sel_end)
+  local regions = {}
+  local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
+  local total = num_markers + num_regions
+  for i = 0, total-1 do
+    local retval, isrgn, pos, rgnend, name, idx = reaper.EnumProjectMarkers(i)
+    if isrgn then
+      local include = true
+      if time_sel_start and time_sel_end and time_sel_end > time_sel_start then
+        -- region overlaps time selection?
+        include = (rgnend > time_sel_start) and (pos < time_sel_end)
+      end
+      if include then
+        table.insert(regions, {
+          idx = idx,
+          name = name or "",
+          start = pos,
+          ["end"] = rgnend,
+          length = rgnend - pos
+        })
+      end
+    end
+  end
+  return regions
+end
+
 local function GetSelectedItems()
   local t = {}
   for i = 0, reaper.CountSelectedMediaItems(0)-1 do
@@ -236,6 +267,24 @@ local function GenerateMarkerBlock(markers, fmt, numbering, framerate, time_form
   return lines
 end
 
+local function GenerateRegionBlock(regions, fmt_len, fmt_start, fmt_end, framerate, numbering, time_func_len, time_func_start, time_func_end)
+  local lines = {}
+  for i, r in ipairs(regions) do
+    local N = numbering and (tostring(i) .. ". ") or ""
+    local name = r.name or ""
+    local length, start, end_ = r.length, r.start, r["end"]
+
+    -- Always ensure fallback to format_time if no special format function
+    local len_str   = time_func_len   and time_func_len(length)   or format_time(length, fmt_len, framerate)
+    local start_str = time_func_start and time_func_start(start)  or format_time(start, fmt_start, framerate)
+    local end_str   = time_func_end   and time_func_end(end_)     or format_time(end_, fmt_end, framerate)
+
+    local line = string.format("%s%s - %s - %s to %s", N, name, len_str, start_str, end_str)
+    table.insert(lines, line)
+  end
+  return lines
+end
+
 ------------------------------------------------------
 -- MAIN EXPORT LOGIC
 ------------------------------------------------------
@@ -302,6 +351,29 @@ local function Main_Export()
     end
   end
 
+  -- Regions
+  local regions = GetProjectRegionsFiltered(time_sel_start, time_sel_end)
+  if #regions > 0 then
+    table.insert(out, "Regions:")
+    -- Prepare formatting functions for length, start, end
+    local time_func_len, time_func_start, time_func_end = nil, nil, nil
+    if region_len_fmt == 9 then time_func_len = format_beats
+    elseif region_len_fmt == 10 then time_func_len = format_bar_beat end
+    if region_start_fmt == 9 then time_func_start = format_beats
+    elseif region_start_fmt == 10 then time_func_start = format_bar_beat end
+    if region_end_fmt == 9 then time_func_end = format_beats
+    elseif region_end_fmt == 10 then time_func_end = format_bar_beat end
+
+    local region_lines = GenerateRegionBlock(
+      regions,
+      region_len_fmt, region_start_fmt, region_end_fmt,
+      framerate, region_numbering,
+      time_func_len, time_func_start, time_func_end
+    )
+    for _, line in ipairs(region_lines) do table.insert(out, line) end
+    table.insert(out, "")
+  end
+
   local result = table.concat(out, "\n")
   if reaper.CF_SetClipboard then
     reaper.CF_SetClipboard(result)
@@ -325,10 +397,11 @@ local function loop()
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_TITLE, true, reaper.ImGui_WindowFlags_AlwaysAutoResize())
   if visible then
     reaper.ImGui_PushFont(ctx, font)
-    reaper.ImGui_Text(ctx, "Marker Export Options")
+    reaper.ImGui_Text(ctx, "Marker & Region Export Options")
     reaper.ImGui_PopFont(ctx)
 
-    _, marker_time_format = reaper.ImGui_Combo(ctx, "Format", marker_time_format-1, table.concat(format_options, "\0").."\0")
+    -- Project markers
+    _, marker_time_format = reaper.ImGui_Combo(ctx, "Marker/Take Marker Format", marker_time_format-1, table.concat(format_options, "\0").."\0")
     marker_time_format = marker_time_format + 1
 
     _, marker_numbering = reaper.ImGui_Checkbox(ctx, "Enable Marker Numbering (1, 2...)", marker_numbering)
@@ -344,7 +417,20 @@ local function loop()
 
     reaper.ImGui_Separator(ctx)
 
-    if reaper.ImGui_Button(ctx, "Export Markers to Clipboard & Console") then
+    -- Regions
+    reaper.ImGui_Text(ctx, "Region Export Options")
+    _, region_numbering = reaper.ImGui_Checkbox(ctx, "Enable Region Numbering (1. 2. ...)", region_numbering)
+
+    _, region_len_fmt = reaper.ImGui_Combo(ctx, "Region Length Format", region_len_fmt-1, table.concat(format_options, "\0").."\0")
+    region_len_fmt = region_len_fmt + 1
+    _, region_start_fmt = reaper.ImGui_Combo(ctx, "Region Start Format", region_start_fmt-1, table.concat(format_options, "\0").."\0")
+    region_start_fmt = region_start_fmt + 1
+    _, region_end_fmt = reaper.ImGui_Combo(ctx, "Region End Format", region_end_fmt-1, table.concat(format_options, "\0").."\0")
+    region_end_fmt = region_end_fmt + 1
+
+    reaper.ImGui_Separator(ctx)
+
+    if reaper.ImGui_Button(ctx, "Export Markers & Regions to Clipboard & Console") then
       Main_Export()
       reaper.ImGui_Text(ctx, "Exported!")
     end
