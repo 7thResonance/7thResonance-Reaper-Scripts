@@ -122,6 +122,7 @@ Doesnt create send if folder.]]></changelog>
 {\pard \ql \f0 \sa180 \li0 \fi0 Freeze Instrument - Auto bypass FX and only freeze Instruments.\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Insert FX Based on Selection - Open add FX window based on the mouse cursor postition (Track or Items)\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Control Sends of Selected Track - Allows to control send volume of many tracks at once\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Adds [Frozen] to Frozen Track's Name - Add ' [Frozen] to Frozen tracks, removes it when thawed\par}
 }
 ]]></description>
   </metadata>
