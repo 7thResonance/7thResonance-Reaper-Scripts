@@ -29,4 +29,4 @@ Control Sends of Selected Track - Allows to control send volume of many tracks a
 
 Adds [Frozen] to Frozen Track's Name - Add ' [Frozen] to Frozen tracks, removes it when thawed
 
-Marker Eporter - GUI to export Project/Take Markers and Regions.
+Marker Exporter - GUI to export Project/Take Markers and Regions.
