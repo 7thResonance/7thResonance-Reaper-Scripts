@@ -155,6 +155,7 @@ Doesnt create send if folder.]]></changelog>
 {\pard \ql \f0 \sa180 \li0 \fi0 Insert FX Based on Selection - Open add FX window based on the mouse cursor postition (Track or Items)\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Control Sends of Selected Track - Allows to control send volume of many tracks at once\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Adds [Frozen] to Frozen Track's Name - Add ' [Frozen] to Frozen tracks, removes it when thawed\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Marker Exporter - GUI to export Project/Take Markers and Regions.\par}
 }
 ]]></description>
   </metadata>
