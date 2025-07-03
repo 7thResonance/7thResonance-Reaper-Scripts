@@ -28,3 +28,5 @@ Insert FX Based on Selection - Open add FX window based on the mouse cursor post
 Control Sends of Selected Track - Allows to control send volume of many tracks at once
 
 Adds [Frozen] to Frozen Track's Name - Add ' [Frozen] to Frozen tracks, removes it when thawed
+
+Marker Eporter - GUI to export Project/Take Markers and Regions.
