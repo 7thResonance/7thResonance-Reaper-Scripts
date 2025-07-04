@@ -12,6 +12,7 @@ function string.ends(String, End)
 end
 
 -- Get current undo description
+---@diagnostic disable-next-line: lowercase-global
 function get_undo_desc()
     local desc = reaper.Undo_CanUndo2(0)
     if not desc then desc = "" end
@@ -52,6 +53,7 @@ end
 -- Main state
 local last_undo_desc = get_undo_desc()
 
+---@diagnostic disable-next-line: lowercase-global
 function main()
     local now_undo_desc = get_undo_desc()
     if now_undo_desc ~= last_undo_desc then

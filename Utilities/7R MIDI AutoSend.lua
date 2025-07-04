@@ -24,6 +24,7 @@ function ensureHardwareFeedbackTrack()
     local feedbackTrack
     for i = 0, reaper.CountTracks(0) - 1 do
       local track = reaper.GetTrack(0, i)
+---@diagnostic disable-next-line: redundant-parameter
       local _, trackName = reaper.GetTrackName(track, "")
       if trackName == "Hardware Feedback Track" then
         feedbackTrack = track
@@ -141,6 +142,7 @@ function monitorTrackSelection()
         end
 
         -- Set up MIDI send for the newly selected track, but only if it's not a folder track and meets eligibility
+---@diagnostic disable-next-line: redundant-parameter
         if selectedTrack and reaper.GetTrackName(selectedTrack, "") ~= "Hardware Feedback Track" then
             local isFolder = reaper.GetMediaTrackInfo_Value(selectedTrack, "I_FOLDERDEPTH")
             if isFolder <= 0 then -- Only proceed if not a folder track (folder depth <= 0)
