@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="e843713e05751970dcb374b9c1febba37dcd4341">
+<index version="1" name="7thResonance's Reaper Scripts" commit="071f47796e742006a97122043d18c0aaa121e642">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -121,6 +121,12 @@
         <changelog><![CDATA[- Added back Bar and Beat support
 - Fixed item-relative marker filtering when time selection is active and item is not at project start.]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/e843713e05751970dcb374b9c1febba37dcd4341/Utilities/7R%20Marker%20n%20Region%20Exporter%20(GUI)(Project,%20Take,%20Item%20relative,%20Source%20Relative).lua</source>
+      </version>
+      <version name="1.4" author="7thResonance" time="2025-07-04T15:59:21Z">
+        <changelog><![CDATA[- Added Custom export option
+- Added Preset save and load options
+- Fixed some value bugs]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/071f47796e742006a97122043d18c0aaa121e642/Utilities/7R%20Marker%20n%20Region%20Exporter%20(GUI)(Project,%20Take,%20Item%20relative,%20Source%20Relative).lua</source>
       </version>
     </reapack>
     <reapack name="7R MIDI AutoSend.lua" type="script" desc="7R MIDI Auto Send for CC Feedback">
