@@ -1,9 +1,9 @@
 --[[
 @description 7R Marker n Region Exporter (Project/Take/Regions)
 @author 7thResonance
-@version 1.2
+@version 1.3
 @changelog
-  - Removed Bar:Beat and Beats export options for debugging and revision.
+  - Added back Bar and Beat support
   - Fixed item-relative marker filtering when time selection is active and item is not at project start.
 @about GUI for exporting project and take markers and Regions in various formats.
 - HH:MM:SS
@@ -14,6 +14,8 @@
 - SS:MS
 - MS only
 - Frames
+- Bar:beat
+- Beats
 
 -Optional Numbering
 
@@ -21,7 +23,7 @@
 local reaper = reaper
 
 -- SETTINGS
-local SCRIPT_TITLE = "Export Project Markers, Item Markers & Regions"
+local SCRIPT_TITLE = "Export Markers/Regions (Bar:Beat/Beat/Time)"
 
 -- REAIMGUI SETUP
 if not reaper.ImGui_CreateContext then
@@ -35,15 +37,6 @@ local font = reaper.ImGui_CreateFont('sans-serif', FONT_SIZE)
 reaper.ImGui_Attach(ctx, font)
 
 -- GUI STATE
-local marker_time_format = 1 -- see format_options below
-local marker_numbering = true
-local item_marker_timebase = 1 -- 1:Item-Relative, 2:Project-Relative, 3:Source-Relative
-
-local region_len_fmt = 1
-local region_start_fmt = 1
-local region_end_fmt = 1
-local region_numbering = true
-
 local format_options = {
   "HH:MM:SS",
   "HH:MM:SS:MS",
@@ -52,12 +45,21 @@ local format_options = {
   "SS",
   "SS:MS",
   "MS Only",
-  "Frames"
+  "Frames",
+  "Bar:Beat",
+  "Beat"
 }
+local marker_time_format = 1
+local marker_numbering = true
+local item_marker_timebase = 1 -- 1:Item-Relative, 2:Project-Relative
+local region_len_fmt = 1
+local region_start_fmt = 1
+local region_end_fmt = 1
+local region_numbering = true
+
 local timebase_options = {
   "Item-Relative",
-  "Project-Relative",
-  "Source-Relative"
+  "Project-Relative"
 }
 
 ------------------------------------------------------
@@ -71,6 +73,19 @@ local function get_project_framerate()
     rate = tonumber(str) or 30
   end
   return rate
+end
+
+-- Bar:Beat and Beat formatting using accurate logic
+local function format_bar_beat(seconds)
+  local proj = 0
+  local beat_in_bar, bar_idx = reaper.TimeMap2_timeToBeats(proj, seconds)
+  return string.format("%d:%02.3f", (bar_idx or 0) + 1, (beat_in_bar or 0) + 1)
+end
+
+local function format_beat(seconds)
+  local proj = 0
+  local _, _, _, total_full_beats = reaper.TimeMap2_timeToBeats(proj, seconds)
+  return string.format("%.4f", total_full_beats or 0)
 end
 
 local function format_time(seconds, fmt, framerate)
@@ -115,9 +130,38 @@ local function format_time(seconds, fmt, framerate)
     local rate = framerate or get_project_framerate()
     local frames = math.floor(seconds * rate + 0.5)
     return tostring(frames)
+  elseif fmt == 9 then
+    -- Bar:Beat
+    return format_bar_beat(seconds)
+  elseif fmt == 10 then
+    -- Beat
+    return format_beat(seconds)
   else
     return tostring(seconds)
   end
+end
+
+local function region_length_bar_beat(start_sec, end_sec)
+  -- Uses bar_idx and beat_in_bar for both ends, calculates difference
+  local proj = 0
+  local beat_in_bar1, bar_idx1 = reaper.TimeMap2_timeToBeats(proj, start_sec)
+  local beat_in_bar2, bar_idx2 = reaper.TimeMap2_timeToBeats(proj, end_sec)
+  local bar_diff = (bar_idx2 or 0) - (bar_idx1 or 0)
+  local beat_diff = (beat_in_bar2 or 0) - (beat_in_bar1 or 0)
+  if beat_diff < 0 then
+    bar_diff = bar_diff - 1
+    -- get beats per bar at start_sec
+    local _, beats_per_bar = reaper.TimeMap_GetTimeSigAtTime(proj, start_sec)
+    beat_diff = beat_diff + (beats_per_bar or 0)
+  end
+  return string.format("%d bars + %.3f beats", bar_diff, beat_diff)
+end
+
+local function region_length_beats(start_sec, end_sec)
+  local proj = 0
+  local _, _, _, fullbeats1 = reaper.TimeMap2_timeToBeats(proj, start_sec)
+  local _, _, _, fullbeats2 = reaper.TimeMap2_timeToBeats(proj, end_sec)
+  return string.format("%.4f", (fullbeats2 or 0) - (fullbeats1 or 0))
 end
 
 local function GetProjectMarkers()
@@ -181,8 +225,7 @@ local function GetSelectedItems()
   return t
 end
 
--- Unified take marker extraction and conversion, with filtering by time selection
--- timebase: 1 = item-relative, 2 = project-relative, 3 = source-relative
+-- timebase: 1 = item-relative, 2 = project-relative
 local function GetTakeMarkersFiltered(item, timebase, time_sel_start, time_sel_end)
   local take = reaper.GetActiveTake(item)
   if not take then return {} end
@@ -200,8 +243,6 @@ local function GetTakeMarkersFiltered(item, timebase, time_sel_start, time_sel_e
       pos = (src_pos - take_offset) / rate
     elseif timebase == 2 then
       pos = item_pos + (src_pos - take_offset) / rate
-    elseif timebase == 3 then
-      pos = src_pos
     end
 
     -- Only include markers within played portion of item (for item- and project-relative)
@@ -212,19 +253,14 @@ local function GetTakeMarkersFiltered(item, timebase, time_sel_start, time_sel_e
       include = (pos >= item_pos and pos <= item_pos + item_len)
     end
 
-    -- Correct time selection filtering for item-relative and project-relative
-    if (timebase == 1 or timebase == 2) and time_sel_start and time_sel_end and time_sel_end > time_sel_start then
-      local marker_project_pos = (timebase == 1)
-        and (item_pos + pos)
-        or pos
+    -- Robust time selection filtering (always check marker's project position)
+    local marker_project_pos = item_pos + (src_pos - take_offset) / rate
+    if time_sel_start and time_sel_end and time_sel_end > time_sel_start then
       include = include and (marker_project_pos >= time_sel_start and marker_project_pos <= time_sel_end)
-    elseif timebase == 3 and time_sel_start and time_sel_end and time_sel_end > time_sel_start then
-      local project_time = item_pos + (src_pos - take_offset) / rate
-      include = (project_time >= time_sel_start and project_time <= time_sel_end)
     end
 
     if include then
-      table.insert(ret, {idx=i+1, pos=pos, name=name or ""})
+      table.insert(ret, {idx=i+1, pos=pos, name=name or "", item_pos=item_pos})
     end
   end
   return ret
@@ -240,15 +276,18 @@ local function GetItemName(item)
   return fn:match("[^\\/]+$") or "Unnamed"
 end
 
-local function GenerateMarkerBlock(markers, fmt, numbering, framerate, time_format_func)
+local function GenerateMarkerBlock(markers, fmt, numbering, framerate, timebase)
   local lines = {}
   for i, m in ipairs(markers) do
     local idx = numbering and (tostring(i) .. " ") or ""
-    local time_str = ""
-    if time_format_func then
-      time_str = time_format_func(m.pos)
+    local pos = m.pos
+    local time_str
+    if fmt == 9 then -- Bar:Beat
+      time_str = format_bar_beat(pos)
+    elseif fmt == 10 then
+      time_str = format_beat(pos)
     else
-      time_str = format_time(m.pos, fmt, framerate)
+      time_str = format_time(pos, fmt, framerate)
     end
     local line = string.format("%s%s %s", idx, time_str, m.name)
     table.insert(lines, line)
@@ -256,17 +295,40 @@ local function GenerateMarkerBlock(markers, fmt, numbering, framerate, time_form
   return lines
 end
 
-local function GenerateRegionBlock(regions, fmt_len, fmt_start, fmt_end, framerate, numbering, time_func_len, time_func_start, time_func_end)
+local function GenerateRegionBlock(regions, fmt_len, fmt_start, fmt_end, framerate, numbering)
   local lines = {}
   for i, r in ipairs(regions) do
     local N = numbering and (tostring(i) .. ". ") or ""
     local name = r.name or ""
     local length, start, end_ = r.length, r.start, r["end"]
+    local len_str, start_str, end_str
 
-    -- Always ensure fallback to format_time if no special format function
-    local len_str   = time_func_len   and time_func_len(length)   or format_time(length, fmt_len, framerate)
-    local start_str = time_func_start and time_func_start(start)  or format_time(start, fmt_start, framerate)
-    local end_str   = time_func_end   and time_func_end(end_)     or format_time(end_, fmt_end, framerate)
+    -- Length
+    if fmt_len == 9 then -- Bar:Beat
+      len_str = region_length_bar_beat(start, end_)
+    elseif fmt_len == 10 then -- Beat
+      len_str = region_length_beats(start, end_)
+    else
+      len_str = format_time(length, fmt_len, framerate)
+    end
+
+    -- Start
+    if fmt_start == 9 then
+      start_str = format_bar_beat(start)
+    elseif fmt_start == 10 then
+      start_str = format_beat(start)
+    else
+      start_str = format_time(start, fmt_start, framerate)
+    end
+
+    -- End
+    if fmt_end == 9 then
+      end_str = format_bar_beat(end_)
+    elseif fmt_end == 10 then
+      end_str = format_beat(end_)
+    else
+      end_str = format_time(end_, fmt_end, framerate)
+    end
 
     local line = string.format("%s%s - %s - %s to %s", N, name, len_str, start_str, end_str)
     table.insert(lines, line)
@@ -292,9 +354,7 @@ local function Main_Export()
   local proj_markers = GetProjectMarkerSelection(time_sel_start, time_sel_end)
   if #proj_markers > 0 then
     table.insert(out, "Project Markers:")
-    local time_func = nil
-    -- No beats/bar:beat options
-    local proj_lines = GenerateMarkerBlock(proj_markers, marker_time_format, marker_numbering, framerate, time_func)
+    local proj_lines = GenerateMarkerBlock(proj_markers, marker_time_format, marker_numbering, framerate, 2)
     for _, line in ipairs(proj_lines) do table.insert(out, line) end
     table.insert(out, "")
   end
@@ -305,10 +365,9 @@ local function Main_Export()
     for i, item in ipairs(items) do
       local name = GetItemName(item)
       table.insert(out, "Item: " .. name)
-      local markers = GetTakeMarkersFiltered(item, item_marker_timebase, time_sel_start, time_sel_end)
-      local time_func = nil
-      -- No beats/bar:beat options
-      local lines = GenerateMarkerBlock(markers, marker_time_format, marker_numbering, framerate, time_func)
+      local timebase = item_marker_timebase
+      local markers = GetTakeMarkersFiltered(item, timebase, time_sel_start, time_sel_end)
+      local lines = GenerateMarkerBlock(markers, marker_time_format, marker_numbering, framerate, timebase)
       for _, line in ipairs(lines) do table.insert(out, line) end
       table.insert(out, "")
     end
@@ -318,15 +377,10 @@ local function Main_Export()
   local regions = GetProjectRegionsFiltered(time_sel_start, time_sel_end)
   if #regions > 0 then
     table.insert(out, "Regions:")
-    -- Prepare formatting functions for length, start, end
-    local time_func_len, time_func_start, time_func_end = nil, nil, nil
-    -- No beats/bar:beat options
-
     local region_lines = GenerateRegionBlock(
       regions,
       region_len_fmt, region_start_fmt, region_end_fmt,
-      framerate, region_numbering,
-      time_func_len, time_func_start, time_func_end
+      framerate, region_numbering
     )
     for _, line in ipairs(region_lines) do table.insert(out, line) end
     table.insert(out, "")
@@ -352,7 +406,6 @@ end
 ------------------------------------------------------
 
 local function loop()
----@diagnostic disable-next-line: undefined-field
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_TITLE, true, reaper.ImGui_WindowFlags_AlwaysAutoResize())
   if visible then
     reaper.ImGui_PushFont(ctx, font)
@@ -370,10 +423,8 @@ local function loop()
       reaper.ImGui_Separator(ctx)
       reaper.ImGui_Text(ctx, "Item Marker Options")
 
-      local tb_opts, tb_count
-      tb_opts = timebase_options
-      tb_count = #timebase_options
-
+      local tb_opts = timebase_options
+      local tb_count = #timebase_options
       local tb_opts_str = table.concat(tb_opts, "\0") .. "\0"
       local curr_tb_idx = item_marker_timebase - 1
       if curr_tb_idx < 0 then curr_tb_idx = 0 end
