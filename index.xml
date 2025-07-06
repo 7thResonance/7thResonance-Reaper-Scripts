@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="14a8a397720c0cc4b2cb628630b07d2a3a2ad980">
+<index version="1" name="7thResonance's Reaper Scripts" commit="f0f00f5a3b76fe5bf63707704e879a74eca8a3a8">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -133,6 +133,10 @@
 - Added Project start offset option
 - Fixed some value bugs]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/14a8a397720c0cc4b2cb628630b07d2a3a2ad980/Utilities/7R%20Marker%20n%20Region%20Exporter%20(GUI)(Project,%20Take,%20Item%20relative,%20Source%20Relative).lua</source>
+      </version>
+      <version name="1.6" author="7thResonance" time="2025-07-06T22:04:30Z">
+        <changelog><![CDATA[- added warning message for project offset issues]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/f0f00f5a3b76fe5bf63707704e879a74eca8a3a8/Utilities/7R%20Marker%20n%20Region%20Exporter%20(GUI)(Project,%20Take,%20Item%20relative,%20Source%20Relative).lua</source>
       </version>
     </reapack>
     <reapack name="7R MIDI AutoSend.lua" type="script" desc="7R MIDI Auto Send for CC Feedback">
