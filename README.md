@@ -14,6 +14,8 @@ Github: https://github.com/7thResonance/7thResonance-Reaper-Scripts
 
 Discord: https://discord.com/invite/Y7MWJgB4mc
 
+Donation https://paypal.me/7thresonance
+
 
 Scripts;
 
