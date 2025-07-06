@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="f0f00f5a3b76fe5bf63707704e879a74eca8a3a8">
+<index version="1" name="7thResonance's Reaper Scripts" commit="16e5dc278f335c4e810c5bce360d640402652067">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -105,6 +105,18 @@
 \widowctrl\hyphauto
 
 {\pard \ql \f0 \sa180 \li0 \fi0 GUI for exporting project and take markers and Regions in various formats.\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab HH:MM:SS\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab HH:MM:SS:MS\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab MM:SS Youtube timestamp style\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab MM:SS:MS\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab SS\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab SS:MS\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab MS only\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab Frames\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab Bar:beat\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab Beats\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab Optional Numbering\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab Forum Post link https://forum.cockos.com/showthread.php?t=301676\sa180\par}
 }
 ]]></description>
       </metadata>
