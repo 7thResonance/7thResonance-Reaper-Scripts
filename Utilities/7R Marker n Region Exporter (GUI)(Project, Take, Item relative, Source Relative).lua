@@ -1,11 +1,9 @@
 --[[
 @description 7R Marker n Region Exporter (Project/Take/Regions)
 @author 7thResonance
-@version 1.5
+@version 1.6
 @changelog
-  - Preset bug fixes
-  - Added Project start offset option
-  - Fixed some value bugs
+  - added warning message for project offset issues
 @about GUI for exporting project and take markers and Regions in various formats.
 - HH:MM:SS
 - HH:MM:SS:MS
@@ -1052,6 +1050,23 @@ local function loop()
       if reaper.ImGui_IsItemHovered(ctx) then
         reaper.ImGui_SetTooltip(ctx, "Adds project start time/measure offset to:\n• Project markers\n• Project-relative item markers\n• Region start/end positions\n\nDoes NOT affect:\n• Region lengths (durations)\n• Item-relative marker positions")
       end
+    end
+
+    -- Project offset warning panel
+    local project_offset = get_project_start_time_offset()
+    if project_offset ~= 0 then
+      reaper.ImGui_Separator(ctx)
+      
+      -- Warning panel with background color
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ChildBg(), 0xFF3333AA) -- Semi-transparent red background
+      reaper.ImGui_BeginChild(ctx, "OffsetWarning", 0, 60) -- Removed the boolean parameter
+      
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0xFFFFFFFF) -- White text
+      reaper.ImGui_TextWrapped(ctx, "WARNING: A project offset is detected. Due to API limitations, cannot differentiate between time and measure offset. Unless they are at the same place, you will get incorrect values for bars and beats.")
+      reaper.ImGui_PopStyleColor(ctx) -- Restore text color
+      
+      reaper.ImGui_EndChild(ctx)
+      reaper.ImGui_PopStyleColor(ctx) -- Restore background color
     end
 
     reaper.ImGui_Separator(ctx)
