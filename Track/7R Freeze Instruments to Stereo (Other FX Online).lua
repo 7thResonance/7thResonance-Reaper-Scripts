@@ -5,7 +5,7 @@
 @changelog -Names item to Track name + Frozen $freezecounter (hides the 1)
 @about Freezes Selected tracks. up to Instrument, Other FX are brough online after freezing.
 
-Lua Script for Reaper: Offline non-instrument FX, Freeze Selected Tracks to Stereo, Unlock All Items Directly, Online Remaining FX
+    Lua Script for Reaper: Offline non-instrument FX, Freeze Selected Tracks to Stereo, Unlock All Items Directly, Online Remaining FX
 --]]
 -- Main function
 local function main()

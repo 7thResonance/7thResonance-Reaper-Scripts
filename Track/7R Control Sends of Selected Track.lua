@@ -5,10 +5,10 @@
 @changelog consoldidated undo points
 @about When mulltiple tracks are selected, can change the relative volume of the send over those tracks.
 
-due to my lack of knowledge, or limitation of API (i wouldnt know lmao) 
-alt key is the temporary override button, but you have to press it before dragging the mouse and it will stay active untill the mouse is released.
+    due to my lack of knowledge, or limitation of API (i wouldnt know lmao) 
+    alt key is the temporary override button, but you have to press it before dragging the mouse and it will stay active untill the mouse is released.
 
-Known issues; Undo doesnt work properly, have to undo untill track seletion changes for intial values to be restored. (idk how to fix this)
+    Known issues; Undo doesnt work properly, have to undo untill track seletion changes for intial values to be restored. (idk how to fix this)
 --]]
 
 -- Function to convert linear volume to dB

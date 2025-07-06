@@ -5,18 +5,17 @@
 @changelog - If no midi item is detected, wont create send
 @link Youtube Video https://www.youtube.com/watch?v=u1325Y-tJZQ
 @about MIDI Auto Send from selected track to Specific track
+    Original Script made by Heda. This script allows to send MIDI back to hardware faders. (assuming it supports midi receives and motorised faders positioning themselves)
 
-Original Script made by Heda. This script allows to send MIDI back to hardware faders. (assuming it supports midi receives and motorised faders positioning themselves)
+    Creates a MIDI Send from selected track to "Hardware Feedback Track"
+    Auto Creates track when script is first ran.
 
-Creates a MIDI Send from selected track to "Hardware Feedback Track"
-Auto Creates track when script is first ran.
+    Save the track as part of the default template with the appropriate filters and hardware send. 
+    Disable master send of the hardware feedback track.
 
-Save the track as part of the default template with the appropriate filters and hardware send. 
-Disable master send of the hardware feedback track.
-
-- Does not create send if its a Folder.
-- has a delay of 500 ms to create a send.
-- Need track selection undo points.
+    - Does not create send if its a Folder.
+    - has a delay of 500 ms to create a send.
+    - Need track selection undo points.
 --]]
 
 -- Function to check or create "Hardware Feedback Track" in the current project
