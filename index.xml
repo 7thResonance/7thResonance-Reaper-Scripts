@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="16e5dc278f335c4e810c5bce360d640402652067">
+<index version="1" name="7thResonance's Reaper Scripts" commit="dd394858e450cb88da12b2542833207d2f4c98ec">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -27,6 +27,8 @@
 \widowctrl\hyphauto
 
 {\pard \ql \f0 \sa180 \li0 \fi0 When mulltiple tracks are selected, can change the relative volume of the send over those tracks.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 due to my lack of knowledge, or limitation of API (i wouldnt know lmao) alt key is the temporary override button, but you have to press it before dragging the mouse and it will stay active untill the mouse is released.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Known issues; Undo doesnt work properly, have to undo untill track seletion changes for intial values to be restored. (idk how to fix this)\par}
 }
 ]]></description>
       </metadata>
@@ -46,6 +48,7 @@
 \widowctrl\hyphauto
 
 {\pard \ql \f0 \sa180 \li0 \fi0 Freezes Selected tracks. up to Instrument, Other FX are brough online after freezing.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Lua Script for Reaper: Offline non-instrument FX, Freeze Selected Tracks to Stereo, Unlock All Items Directly, Online Remaining FX\par}
 }
 ]]></description>
       </metadata>
@@ -71,6 +74,7 @@
 \widowctrl\hyphauto
 
 {\pard \ql \f0 \sa180 \li0 \fi0 Opens add FX insert for track or item under cursor\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Known Limitation: If item fx already exists, it only shows Take FX chain window If mouse is on master, it shows FX Broswer\par}
 }
 ]]></description>
       </metadata>
@@ -157,7 +161,12 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 MIDI Auto Send from selected track to Specific track\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 MIDI Auto Send from selected track to Specific track Original Script made by Heda. This script allows to send MIDI back to hardware faders. (assuming it supports midi receives and motorised faders positioning themselves)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Creates a MIDI Send from selected track to "Hardware Feedback Track" Auto Creates track when script is first ran.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Save the track as part of the default template with the appropriate filters and hardware send. Disable master send of the hardware feedback track.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Does not create send if its a Folder.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab has a delay of 500 ms to create a send.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Need track selection undo points.\sa180\par}
 }
 ]]></description>
         <link rel="website" href="https://www.youtube.com/watch?v=u1325Y-tJZQ">Youtube Video</link>
