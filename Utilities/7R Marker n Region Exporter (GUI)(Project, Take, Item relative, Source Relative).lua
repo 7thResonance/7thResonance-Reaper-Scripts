@@ -5,20 +5,20 @@
 @changelog
   - added warning message for project offset issues
 @about GUI for exporting project and take markers and Regions in various formats.
-- HH:MM:SS
-- HH:MM:SS:MS
-- MM:SS Youtube timestamp style
-- MM:SS:MS
-- SS
-- SS:MS
-- MS only
-- Frames
-- Bar:beat
-- Beats
+  - HH:MM:SS
+  - HH:MM:SS:MS
+  - MM:SS Youtube timestamp style
+  - MM:SS:MS
+  - SS
+  - SS:MS
+  - MS only
+  - Frames
+  - Bar:beat
+  - Beats
 
--Optional Numbering
+  - Optional Numbering
 
-- Forum Post link https://forum.cockos.com/showthread.php?t=301676
+  - Forum Post link https://forum.cockos.com/showthread.php?t=301676
 
 --]]
 local reaper = reaper
