@@ -2,6 +2,7 @@
 @description 7R Control Send volume of Selected Track
 @author 7thResonance
 @version 1.1
+@donation https://paypal.me/7thresonance
 @changelog consoldidated undo points
 @about When mulltiple tracks are selected, can change the relative volume of the send over those tracks.
 

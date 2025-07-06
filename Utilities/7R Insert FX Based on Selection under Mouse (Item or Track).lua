@@ -3,6 +3,7 @@
 @author 7thResonance
 @version 1.0
 @changelog Initial
+@donation https://paypal.me/7thresonance
 @about Opens add FX insert for track or item under cursor
 
     Known Limitation: If item fx already exists, it only shows Take FX chain window

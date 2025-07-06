@@ -2,6 +2,7 @@
 @description 7R Freeze Instruments to Stereo (Other FX Online)
 @author 7thResonance
 @version 1.2
+@donation https://paypal.me/7thresonance
 @changelog -Names item to Track name + Frozen $freezecounter (hides the 1)
 @about Freezes Selected tracks. up to Instrument, Other FX are brough online after freezing.
 

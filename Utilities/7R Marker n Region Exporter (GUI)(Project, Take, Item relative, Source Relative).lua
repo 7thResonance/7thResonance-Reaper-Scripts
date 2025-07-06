@@ -4,6 +4,7 @@
 @version 1.6
 @changelog
   - added warning message for project offset issues
+@donation https://paypal.me/7thresonance
 @about GUI for exporting project and take markers and Regions in various formats.
   - HH:MM:SS
   - HH:MM:SS:MS

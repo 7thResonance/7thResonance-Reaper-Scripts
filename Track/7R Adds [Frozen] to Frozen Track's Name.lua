@@ -2,6 +2,7 @@
 @description 7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History
 @author 7thResonance
 @version 1.1
+@donation https://paypal.me/7thresonance
 @changelog Reacts to Undo History: adds [Frozen] when tracks are frozen, removes it when unfrozen. SWS required.
 @about Automatically appends or removes " [Frozen]" in track names when freeze/unfreeze actions are detected in the undo history.
 --]]
