@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="dd394858e450cb88da12b2542833207d2f4c98ec">
+<index version="1" name="7thResonance's Reaper Scripts" commit="a94d1594a1a4e90ace164ee2be7be92da385efa0">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -10,6 +10,7 @@
 {\pard \ql \f0 \sa180 \li0 \fi0 Automatically appends or removes " [Frozen]" in track names when freeze/unfreeze actions are detected in the undo history.\par}
 }
 ]]></description>
+        <link rel="donation">https://paypal.me/7thresonance</link>
       </metadata>
       <version name="1.0" author="7thResonance" time="2025-07-01T23:43:31Z">
         <changelog><![CDATA[initial]]></changelog>
@@ -31,6 +32,7 @@
 {\pard \ql \f0 \sa180 \li0 \fi0 Known issues; Undo doesnt work properly, have to undo untill track seletion changes for intial values to be restored. (idk how to fix this)\par}
 }
 ]]></description>
+        <link rel="donation">https://paypal.me/7thresonance</link>
       </metadata>
       <version name="1.0" author="7thResonance" time="2025-06-26T14:39:10Z">
         <changelog><![CDATA[Initial]]></changelog>
@@ -51,6 +53,7 @@
 {\pard \ql \f0 \sa180 \li0 \fi0 Lua Script for Reaper: Offline non-instrument FX, Freeze Selected Tracks to Stereo, Unlock All Items Directly, Online Remaining FX\par}
 }
 ]]></description>
+        <link rel="donation">https://paypal.me/7thresonance</link>
       </metadata>
       <version name="1.0" author="7thResonance" time="2025-05-29T02:08:27Z">
         <changelog><![CDATA[Initial]]></changelog>
@@ -77,6 +80,7 @@
 {\pard \ql \f0 \sa180 \li0 \fi0 Known Limitation: If item fx already exists, it only shows Take FX chain window If mouse is on master, it shows FX Broswer\par}
 }
 ]]></description>
+        <link rel="donation">https://paypal.me/7thresonance</link>
       </metadata>
       <version name="1.0" author="7thResonance" time="2025-06-08T13:49:17Z">
         <changelog><![CDATA[Initial]]></changelog>
@@ -92,6 +96,7 @@
 {\pard \ql \f0 \sa180 \li0 \fi0 Allows to add markers on items themselves or the ruler (project markers), just point and press shortcut!\par}
 }
 ]]></description>
+        <link rel="donation">https://paypal.me/7thresonance</link>
       </metadata>
       <version name="1.0" author="7thResonance" time="2025-05-19T13:09:00Z">
         <changelog><![CDATA[Initial]]></changelog>
@@ -123,6 +128,7 @@
 {\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab Forum Post link https://forum.cockos.com/showthread.php?t=301676\sa180\par}
 }
 ]]></description>
+        <link rel="donation">https://paypal.me/7thresonance</link>
       </metadata>
       <version name="1.1" author="7thResonance" time="2025-07-02T14:00:51Z">
         <changelog><![CDATA[Initial]]></changelog>
@@ -170,6 +176,7 @@
 }
 ]]></description>
         <link rel="website" href="https://www.youtube.com/watch?v=u1325Y-tJZQ">Youtube Video</link>
+        <link rel="donation">https://paypal.me/7thresonance</link>
       </metadata>
       <version name="1.4" author="7thResonance" time="2025-05-19T11:50:52Z">
         <changelog><![CDATA[Delay of 500 ms.
@@ -195,6 +202,7 @@ Doesnt create send if folder.]]></changelog>
 {\pard \ql \f0 \sa180 \li0 \fi0 Reapack Repository URL: https://raw.githubusercontent.com/7thResonance/7thResonance-Reaper-Scripts/refs/heads/master/index.xml\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Github: https://github.com/7thResonance/7thResonance-Reaper-Scripts\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Discord: https://discord.com/invite/Y7MWJgB4mc\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Donation https://paypal.me/7thresonance\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Scripts;\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Auto send MIDI - Send seelcted track's CC to a track which can be sent back to motorized faders.\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Insert Markers - Based on mousepointer. Either on the ruler,or on the item itself.\par}
