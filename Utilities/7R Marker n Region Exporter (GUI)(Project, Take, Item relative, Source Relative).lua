@@ -1,9 +1,9 @@
 --[[
 @description 7R Marker n Region Exporter (Project/Take/Regions)
 @author 7thResonance
-@version 1.6
+@version 1.7
 @changelog
-  - added warning message for project offset issues
+  - Removed decimal beat values for clarity
 @donation https://paypal.me/7thresonance
 @about GUI for exporting project and take markers and Regions in various formats.
   - HH:MM:SS
@@ -140,8 +140,8 @@ local function parse_custom_format(format_str, context)
   -- Replace all tokens with their values
   result = result:gsub("{seconds}", tostring(context.seconds or 0))
   result = result:gsub("{bar}", tostring(context.bar or 0))
-  result = result:gsub("{beat}", string.format("%.3f", context.beat or 0))
-  result = result:gsub("{fullbeats}", string.format("%.4f", context.fullbeats or 0))
+  result = result:gsub("{beat}", tostring(math.floor(context.beat or 0)))
+  result = result:gsub("{fullbeats}", tostring(math.floor(context.fullbeats or 0)))
   result = result:gsub("{frames}", tostring(context.frames or 0))
   result = result:gsub("{markername}", tostring(context.markername or ""))
   result = result:gsub("{itemname}", tostring(context.itemname or ""))
@@ -176,32 +176,32 @@ local function format_bar_beat(seconds)
   
   -- Handle negative times properly
   if seconds < 0 then
-    return string.format("-%d:%02.3f", math.abs((bar_idx or 0) + 1), math.abs((beat_in_bar or 0) + 1))
+    return string.format("-%d:%d", math.abs((bar_idx or 0) + 1), math.floor(math.abs((beat_in_bar or 0) + 1)))
   else
-    return string.format("%d:%02.3f", (bar_idx or 0) + 1, (beat_in_bar or 0) + 1)
+    return string.format("%d:%d", (bar_idx or 0) + 1, math.floor((beat_in_bar or 0) + 1))
   end
 end
 
--- Bar:Beat formatting for item-relative positions (bar starts from 0, beat starts from 0)
+-- Bar:Beat formatting for item-relative positions (bar starts from 1, beat starts from 1)
 local function format_bar_beat_item_relative(seconds)
   local proj = 0
   local beat_in_bar, bar_idx = reaper.TimeMap2_timeToBeats(proj, seconds)
   
   -- For item-relative positioning:
-  -- Position 0 (item start) should be 1:0 (first bar, beat 0)
-  -- Position at 1 bar from start should be 1:0 (end of first bar)
+  -- Position 0 (item start) should be 1:1 (first bar, first beat)
+  -- Both bar and beat should be 1-based to match standard notation
   if seconds < 0 then
-    return string.format("-%d:%02.3f", math.abs(bar_idx or 0), math.abs(beat_in_bar or 0))
+    return string.format("-%d:%d", math.abs((bar_idx or 0) + 1), math.floor(math.abs((beat_in_bar or 0) + 1)))
   else
-    -- Don't add 1 to either bar_idx or beat_in_bar for item-relative
-    return string.format("%d:%02.3f", (bar_idx or 0) + 1, beat_in_bar or 0)
+    -- Add 1 to both bar_idx and beat_in_bar for item-relative to make them 1-based
+    return string.format("%d:%d", (bar_idx or 0) + 1, math.floor((beat_in_bar or 0) + 1))
   end
 end
 
 local function format_beat(seconds)
   local proj = 0
   local _, _, _, total_full_beats = reaper.TimeMap2_timeToBeats(proj, seconds)
-  return string.format("%.4f", total_full_beats or 0)
+  return string.format("%.0f", total_full_beats or 0)
 end
 
 local function format_time(seconds, fmt, framerate)
@@ -284,17 +284,17 @@ local function region_length_bar_beat(start_sec, end_sec)
   
   -- Convert total beats to bars:beats format
   local bars = math.floor(total_beats / beats_per_bar)
-  local remaining_beats = total_beats % beats_per_bar
+  local remaining_beats = math.floor(total_beats % beats_per_bar)
   
   -- Format as consolidated bar:beat notation (e.g., "3:0" instead of "2 bars + 4 beats")
-  return string.format("%d:%02.3f", bars, remaining_beats)
+  return string.format("%d:%d", bars, remaining_beats)
 end
 
 local function region_length_beats(start_sec, end_sec)
   local proj = 0
   local _, _, _, fullbeats1 = reaper.TimeMap2_timeToBeats(proj, start_sec)
   local _, _, _, fullbeats2 = reaper.TimeMap2_timeToBeats(proj, end_sec)
-  return string.format("%.4f", (fullbeats2 or 0) - (fullbeats1 or 0))
+  return string.format("%.0f", (fullbeats2 or 0) - (fullbeats1 or 0))
 end
 
 ------------------------------------------------------
@@ -345,7 +345,7 @@ local function format_time_with_offset(seconds, fmt, framerate, apply_offset)
       local proj = 0
       local beat_in_bar, bar_idx = reaper.TimeMap2_timeToBeats(proj, seconds)
       local adjusted_bar = (bar_idx or 0) + 1 + measure_offset
-      return string.format("%d:%02.3f", adjusted_bar, (beat_in_bar or 0) + 1)
+      return string.format("%d:%d", adjusted_bar, math.floor((beat_in_bar or 0) + 1))
     else
       -- Beat format with beat offset
       local measure_offset = get_project_start_measure_offset()
@@ -354,7 +354,7 @@ local function format_time_with_offset(seconds, fmt, framerate, apply_offset)
       -- Get beats per bar at project start to calculate beat offset
       local _, beats_per_bar = reaper.TimeMap_GetTimeSigAtTime(proj, 0)
       local beat_offset = measure_offset * (beats_per_bar or 4)
-      return string.format("%.4f", (total_full_beats or 0) + beat_offset)
+      return string.format("%.0f", (total_full_beats or 0) + beat_offset)
     end
   else
     -- For time formats, add time offset
