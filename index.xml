@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="a94d1594a1a4e90ace164ee2be7be92da385efa0">
+<index version="1" name="7thResonance's Reaper Scripts" commit="ad4368b784b0e965a5187e11783dcfb06a8c19f1">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -159,6 +159,10 @@
       <version name="1.6" author="7thResonance" time="2025-07-06T22:04:30Z">
         <changelog><![CDATA[- added warning message for project offset issues]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/f0f00f5a3b76fe5bf63707704e879a74eca8a3a8/Utilities/7R%20Marker%20n%20Region%20Exporter%20(GUI)(Project,%20Take,%20Item%20relative,%20Source%20Relative).lua</source>
+      </version>
+      <version name="1.7" author="7thResonance" time="2025-07-07T07:43:16Z">
+        <changelog><![CDATA[- Removed decimal beat values for clarity]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/ad4368b784b0e965a5187e11783dcfb06a8c19f1/Utilities/7R%20Marker%20n%20Region%20Exporter%20(GUI)(Project,%20Take,%20Item%20relative,%20Source%20Relative).lua</source>
       </version>
     </reapack>
     <reapack name="7R MIDI AutoSend.lua" type="script" desc="7R MIDI Auto Send for CC Feedback">
