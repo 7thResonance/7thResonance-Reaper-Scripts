@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="04e7200cde053c5e9648b68276efad3c43713dc7">
+<index version="1" name="7thResonance's Reaper Scripts" commit="2221064ee4c7336fbfb511077a818f4184c9f199">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -83,6 +83,8 @@
 {\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Settings for basic options\sa180\par}
 }
 ]]></description>
+        <link rel="screenshot">https://i.postimg.cc/DyqgzknJ/Screenshot-2025-07-11-062605.png</link>
+        <link rel="screenshot">https://i.postimg.cc/3JM17J5Q/Screenshot-2025-07-11-062614.png</link>
         <link rel="donation">https://paypal.me/7thresonance</link>
       </metadata>
       <version name="2.0" author="7thResonance" time="2025-07-10T13:37:27Z">
