@@ -1,17 +1,16 @@
 --[[
 @description 7R Insert FX Based on Selection under Mouse cursor (Track or Item, Master)
 @author 7thResonance
-@version 2.1
-@changelog - Shift modifier to add to input FX`
-     - hovering on FX chain window adds to track (use global shortcut for non focused hover)
-@screenshot https://i.postimg.cc/DyqgzknJ/Screenshot-2025-07-11-062605.png
-    https://i.postimg.cc/3JM17J5Q/Screenshot-2025-07-11-062614.png
+@version 2.2
+@changelog - more efficient FX scanning using API instead of manualy parsing
 @donation https://paypal.me/7thresonance
 @about Opens GUI for track, item or master under cursor with GUI to select FX
     - Only supports VST2, VST3 and CLAP. (no AU, LV2 or JS) (I dont have mac or any LV2 plugins)
     - Saves position and size of GUI
     - Cache for quick search. Updates when new plugins are installed
     - Settings for basic options
+@screenshot https://i.postimg.cc/DyqgzknJ/Screenshot-2025-07-11-062605.png
+    https://i.postimg.cc/3JM17J5Q/Screenshot-2025-07-11-062614.png
 
 --]]
 
@@ -67,39 +66,19 @@ local function get_cache_file_path()
   return resource_path .. "/FX_Inserter_cache.json"
 end
 
-local function get_file_modification_time(file_path)
-  local file = io.open(file_path, "r")
-  if not file then return 0 end
-  file:close()
-  
-  -- Simple fallback: use file size as a basic change indicator
-  -- This isn't perfect but works for detecting when files change
-  local file_size = 0
-  local f = io.open(file_path, "r")
-  if f then
-    f:seek("end")
-    file_size = f:seek()
-    f:close()
-  end
-  
-  -- Combine with current time as a basic timestamp
-  return file_size + (os.time() % 10000) -- Use file size + recent time as indicator
-end
-
 local function save_fx_cache(fx_list)
   local cache_data = {
     timestamp = os.time(),
-    vst64_time = 0,
-    vst32_time = 0,
-    clap_time = 0,
+    fx_count = 0, -- Store total enumerated FX count for comparison
     fx_list = fx_list
   }
   
-  -- Get VST and CLAP file modification times
-  local resource_path = reaper.GetResourcePath()
-  cache_data.vst64_time = get_file_modification_time(resource_path .. "/reaper-vstplugins64.ini")
-  cache_data.vst32_time = get_file_modification_time(resource_path .. "/reaper-vstplugins.ini")
-  cache_data.clap_time = get_file_modification_time(resource_path .. "/reaper-clap-win64.ini")
+  -- Count enumerated FX for validation
+  for _, fx in ipairs(fx_list) do
+    if fx.is_vst_cache then
+      cache_data.fx_count = cache_data.fx_count + 1
+    end
+  end
   
   -- Simple JSON-like serialization (basic approach)
   local file = io.open(cache_file_path, "w")
@@ -107,9 +86,7 @@ local function save_fx_cache(fx_list)
     file:write("-- FX Inserter Cache File\n")
     file:write("return {\n")
     file:write("  timestamp = " .. cache_data.timestamp .. ",\n")
-    file:write("  vst64_time = " .. cache_data.vst64_time .. ",\n")
-    file:write("  vst32_time = " .. cache_data.vst32_time .. ",\n")
-    file:write("  clap_time = " .. cache_data.clap_time .. ",\n")
+    file:write("  fx_count = " .. cache_data.fx_count .. ",\n")
     file:write("  fx_list = {\n")
     
     for _, fx in ipairs(fx_list) do
@@ -119,6 +96,7 @@ local function save_fx_cache(fx_list)
       file:write("      full_name = " .. string.format("%q", fx.full_name or "") .. ",\n")
       file:write("      folder = " .. string.format("%q", fx.folder or "") .. ",\n")
       file:write("      path = " .. string.format("%q", fx.path or "") .. ",\n")
+      file:write("      plugin_type = " .. string.format("%q", fx.plugin_type or "") .. ",\n")
       file:write("      is_vst_cache = " .. tostring(fx.is_vst_cache) .. "\n")
       file:write("    },\n")
     end
@@ -141,6 +119,31 @@ local function load_fx_cache()
   local load_func = load or loadstring -- Fallback for older Lua versions
   local success, cache_data = pcall(load_func(content))
   if success and cache_data and cache_data.fx_list then
+    -- Check if cache has old format (without plugin_type field) and update it
+    for _, fx in ipairs(cache_data.fx_list) do
+      if fx.is_vst_cache and not fx.plugin_type then
+        -- This is old format cache - parse the name field
+        local name = fx.name or ""
+        local plugin_type = ""
+        local plugin_name = name
+        
+        -- Check if name contains colon separator for type:name format
+        local colon_pos = name:find(":")
+        if colon_pos then
+          plugin_type = name:sub(1, colon_pos - 1):trim()
+          local extracted_name = name:sub(colon_pos + 1):trim()
+          -- Only use extracted name if it's not empty
+          if extracted_name ~= "" then
+            plugin_name = extracted_name
+          end
+        end
+        
+        -- Update the entry with parsed values
+        fx.name = plugin_name
+        fx.plugin_type = plugin_type
+      end
+    end
+    
     return cache_data
   else
     return nil
@@ -151,18 +154,27 @@ local function is_cache_outdated()
   local cache_data = load_fx_cache()
   if not cache_data then return true end
   
-  local resource_path = reaper.GetResourcePath()
-  local current_vst64_time = get_file_modification_time(resource_path .. "/reaper-vstplugins64.ini")
-  local current_vst32_time = get_file_modification_time(resource_path .. "/reaper-vstplugins.ini")
-  local current_clap_time = get_file_modification_time(resource_path .. "/reaper-clap-win64.ini")
+  -- Quick check: compare current enumerated FX count with cached count
+  local current_fx_count = 0
+  local index = 0
   
-  -- Check if any plugin files are newer than cache
-  if current_vst64_time > (cache_data.vst64_time or 0) or 
-     current_vst32_time > (cache_data.vst32_time or 0) or
-     current_clap_time > (cache_data.clap_time or 0) then
+  -- Count current installed FX
+  while true do
+    local retval, name, ident = reaper.EnumInstalledFX(index)
+    if not retval then break end
+    
+    if name and name ~= "" and ident and ident ~= "" then
+      current_fx_count = current_fx_count + 1
+    end
+    index = index + 1
+  end
+  
+  -- If FX count changed, cache is outdated
+  if current_fx_count ~= (cache_data.fx_count or 0) then
     return true
   end
   
+  -- Cache is considered fresh if FX count matches
   return false
 end
 
@@ -276,162 +288,53 @@ local function read_fx_folders()
   return custom_folders, folder_names
 end
 
-local function read_vst_cache()
-  local resource_path = reaper.GetResourcePath()
-  local vst64_path = resource_path .. "/reaper-vstplugins64.ini"
-  local vst32_path = resource_path .. "/reaper-vstplugins.ini"
+local function enum_all_installed_fx()
+  local all_fx = {}
+  local index = 0
   
-  local all_vst_fx = {}
-  
-  -- Read 64-bit VST cache
-  local file = io.open(vst64_path, "r")
-  if file then
-    local content = file:read("*all")
-    file:close()
+  -- Enumerate all installed FX using the REAPER API
+  while true do
+    local retval, name, ident = reaper.EnumInstalledFX(index)
     
-    for line in content:gmatch("[^\r\n]+") do
-      -- Skip section headers and empty lines
-      if line:match("=") and not line:match("^%[") and line:trim() ~= "" then
-        local filename, data = line:match("^([^=]+)=(.+)")
-        if filename and data then
-          -- Parse format: {String1},{String2},{Plugin Name},{Developer Name}
-          local parts = {}
-          for part in data:gmatch("[^,]+") do
-            table.insert(parts, part)
-          end
-          
-          -- We need at least 3 parts to get the plugin name (3rd part)
-          if #parts >= 3 then
-            local plugin_name = parts[3]
-            -- Clean up the plugin name
-            plugin_name = plugin_name:gsub("^%s+", ""):gsub("%s+$", "") -- trim whitespace
-            
-            -- Skip empty plugin names
-            if plugin_name ~= "" then
-              local fx_entry = {
-                filename = filename,
-                name = plugin_name,
-                full_name = plugin_name,
-                folder = "All FX",
-                path = filename,
-                is_vst_cache = true
-              }
-              
-              table.insert(all_vst_fx, fx_entry)
-            end
-          end
-        end
-      end
+    -- Break if no more FX found
+    if not retval then
+      break
     end
-  end
-  
-  -- Read 32-bit VST cache
-  file = io.open(vst32_path, "r")
-  if file then
-    local content = file:read("*all")
-    file:close()
     
-    for line in content:gmatch("[^\r\n]+") do
-      -- Skip section headers and empty lines
-      if line:match("=") and not line:match("^%[") and line:trim() ~= "" then
-        local filename, data = line:match("^([^=]+)=(.+)")
-        if filename and data then
-          -- Parse format: {String1},{String2},{Plugin Name},{Developer Name}
-          local parts = {}
-          for part in data:gmatch("[^,]+") do
-            table.insert(parts, part)
-          end
-          
-          -- We need at least 3 parts to get the plugin name (3rd part)
-          if #parts >= 3 then
-            local plugin_name = parts[3]
-            -- Clean up the plugin name
-            plugin_name = plugin_name:gsub("^%s+", ""):gsub("%s+$", "") -- trim whitespace
-            
-            -- Check if this plugin is already in the list (avoid 32/64 duplicates)
-            local already_exists = false
-            for _, existing_fx in ipairs(all_vst_fx) do
-              if existing_fx.name == plugin_name then
-                already_exists = true
-                break
-              end
-            end
-            
-            -- Skip empty plugin names and duplicates
-            if plugin_name ~= "" and not already_exists then
-              table.insert(all_vst_fx, {
-                filename = filename,
-                name = plugin_name,
-                full_name = plugin_name,
-                folder = "All FX",
-                path = filename,
-                is_vst_cache = true
-              })
-            end
-          end
-        end
-      end
-    end
-  end
-  
-  return all_vst_fx
-end
-
-local function read_clap_cache()
-  local resource_path = reaper.GetResourcePath()
-  local clap_path = resource_path .. "/reaper-clap-win64.ini"
-  
-  local all_clap_fx = {}
-  
-  local file = io.open(clap_path, "r")
-  if file then
-    local content = file:read("*all")
-    file:close()
-    
-    local current_plugin_file = nil
-    
-    for line in content:gmatch("[^\r\n]+") do
-      line = line:gsub("^%s+", ""):gsub("%s+$", "") -- trim whitespace
+    -- Skip empty names
+    if name and name ~= "" and ident and ident ~= "" then
+      -- Extract plugin type and name from "Plugin Type: Plugin Name" format
+      local plugin_type = ""
+      local plugin_name = name
       
-      -- Parse section headers like [plugin-filename.clap]
-      if line:match("^%[.+%.clap%]") then
-        current_plugin_file = line:match("^%[(.+)%]")
-        
-      -- Parse plugin entries (skip metadata lines starting with _=)
-      elseif current_plugin_file and line:match("=") and not line:match("^_=") then
-        local clap_id, data = line:match("^([^=]+)=(.+)")
-        if clap_id and data then
-          -- Parse format: index|Display Name (Developer)
-          local index, name_and_dev = data:match("^(%d+)|(.+)")
-          if index and name_and_dev then
-            -- Extract plugin name and developer
-            local plugin_name, developer = name_and_dev:match("^(.+)%s%((.+)%)$")
-            if plugin_name and developer then
-              -- Clean up names
-              plugin_name = plugin_name:gsub("^%s+", ""):gsub("%s+$", "")
-              developer = developer:gsub("^%s+", ""):gsub("%s+$", "")
-              
-              local fx_entry = {
-                filename = current_plugin_file,
-                name = plugin_name,
-                full_name = plugin_name,
-                folder = "All FX",
-                path = current_plugin_file,
-                is_vst_cache = true, -- Use same flag for cache-based plugins
-                plugin_type = "CLAP",
-                clap_id = clap_id,
-                developer = developer
-              }
-              
-              table.insert(all_clap_fx, fx_entry)
-            end
-          end
+      -- Check if name contains colon separator for type:name format
+      local colon_pos = name:find(":")
+      if colon_pos then
+        plugin_type = name:sub(1, colon_pos - 1):trim()
+        local extracted_name = name:sub(colon_pos + 1):trim()
+        -- Only use extracted name if it's not empty
+        if extracted_name ~= "" then
+          plugin_name = extracted_name
         end
       end
+      
+      local fx_entry = {
+        filename = ident,
+        name = plugin_name, -- Store only the plugin name without type
+        full_name = ident, -- Use identifier as full name for insertion
+        folder = "All FX",
+        path = ident,
+        plugin_type = plugin_type, -- Store the plugin type separately
+        is_vst_cache = true -- Mark as enumerated FX
+      }
+      
+      table.insert(all_fx, fx_entry)
     end
+    
+    index = index + 1
   end
   
-  return all_clap_fx
+  return all_fx
 end
 
 local function extract_plugin_name_from_path(path)
@@ -490,7 +393,7 @@ local function get_all_fx_with_cache()
   -- Always load user folders first (fast)
   local fx_list = get_all_fx()
   
-  -- Try to load VST and CLAP FX from cache
+  -- Try to load enumerated FX from cache
   local cache_data = load_fx_cache()
   if cache_data and cache_data.fx_list then
     for _, fx in ipairs(cache_data.fx_list) do
@@ -499,14 +402,10 @@ local function get_all_fx_with_cache()
       end
     end
   else
-    -- No cache, scan VST and CLAP immediately (first run)
-    local vst_fx = read_vst_cache()
-    local clap_fx = read_clap_cache()
+    -- No cache, enumerate all FX immediately (first run)
+    local enumerated_fx = enum_all_installed_fx()
     
-    for _, fx in ipairs(vst_fx) do
-      table.insert(fx_list, fx)
-    end
-    for _, fx in ipairs(clap_fx) do
+    for _, fx in ipairs(enumerated_fx) do
       table.insert(fx_list, fx)
     end
     
@@ -711,19 +610,15 @@ local function background_scan_vst()
     -- Get current user folders
     local user_fx = get_all_fx()
     
-    -- Scan VST cache files
-    local vst_fx = read_vst_cache()
-    local clap_fx = read_clap_cache()
+    -- Enumerate all installed FX using the REAPER API
+    local enumerated_fx = enum_all_installed_fx()
     
     -- Combine all FX
     local all_fx = {}
     for _, fx in ipairs(user_fx) do
       table.insert(all_fx, fx)
     end
-    for _, fx in ipairs(vst_fx) do
-      table.insert(all_fx, fx)
-    end
-    for _, fx in ipairs(clap_fx) do
+    for _, fx in ipairs(enumerated_fx) do
       table.insert(all_fx, fx)
     end
     
@@ -1306,6 +1201,12 @@ local function draw_fx_list()
         -- Enhanced tooltip with modifier key info
         if reaper.ImGui_IsItemHovered(ctx) then
           local tooltip_text = fx.path or fx.full_name
+          
+          -- Add plugin type to tooltip if available
+          if fx.plugin_type and fx.plugin_type ~= "" then
+            tooltip_text = "Type: " .. fx.plugin_type .. "\nPath: " .. tooltip_text
+          end
+          
           if insert_mode == "track" or insert_mode == "master" then
             if shift_held then
               tooltip_text = tooltip_text .. "\n\n[Shift] Insert to Input FX"
@@ -1635,7 +1536,3 @@ local function save_window_state()
     end
   end
 end
-
-
-
-
