@@ -1,7 +1,8 @@
 --[[
 @description 7R Insert Instrument (Respecting Folders)
 @author 7thResonance
-@version 1.0
+@version 1.1
+@changelog - Text field is automaticaly focused for easier search.
 @about Original Folder Respect logic is by Aaron Cendan (Insert New Track Respect Folders)
   Uses that logic to insert instrument at the start,middle, or end of folders.
   If no folder is selected, inserts at end of tracks
@@ -487,6 +488,11 @@ end
 function draw_search_box()
   reaper.ImGui_Text(ctx, "Search Instruments:")
   reaper.ImGui_SameLine(ctx)
+  
+  -- Auto-focus the search field when window first opens
+  if reaper.ImGui_IsWindowAppearing(ctx) then
+    reaper.ImGui_SetKeyboardFocusHere(ctx)
+  end
   
   local changed, new_text = reaper.ImGui_InputText(ctx, "##search", search_text)
   if changed then

@@ -1,8 +1,8 @@
 --[[
 @description 7R Insert FX Based on Selection under Mouse cursor (Track or Item, Master)
 @author 7thResonance
-@version 2.2
-@changelog - more efficient FX scanning using API instead of manualy parsing
+@version 2.3
+@changelog - Text frield is focused for easier searching
 @donation https://paypal.me/7thresonance
 @about Opens GUI for track, item or master under cursor with GUI to select FX
     - Only supports VST2, VST3 and CLAP. (no AU, LV2 or JS) (I dont have mac or any LV2 plugins)
@@ -1039,6 +1039,12 @@ end
 local function draw_search_box()
   reaper.ImGui_Text(ctx, "Search:")
   reaper.ImGui_SameLine(ctx)
+  
+  -- Auto-focus the search field when window first opens
+  if reaper.ImGui_IsWindowAppearing(ctx) then
+    reaper.ImGui_SetKeyboardFocusHere(ctx)
+  end
+  
   local changed, new_text = reaper.ImGui_InputText(ctx, "##search", search_text)
   if changed then
     search_text = new_text
