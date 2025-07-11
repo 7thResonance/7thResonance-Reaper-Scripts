@@ -1,15 +1,9 @@
 --[[
 @description 7R Insert FX Based on Selection under Mouse cursor (Track or Item, Master)
 @author 7thResonance
-@version 2.0
-@changelog - GUI Version!
-    - Basic settings
-    - GUI for user folders and FX
-    - Inserts based on mouse cursor (Track, Item, Master)
-    - Supports VST, VST3 and Clap (No AU, LV2 or JS)
-    - Cache for quick startup
-    - Save and load settings
-    - Multiple basic settings for behaviour
+@version 2.1
+@changelog - Shift modifier to add to input FX`
+     - hovering on FX chain window adds to track (use global shortcut for non focused hover)
 @donation https://paypal.me/7thresonance
 @about Opens GUI for track, item or master under cursor with GUI to select FX
     - Only supports VST2, VST3 and CLAP. (no AU, LV2 or JS) (I dont have mac or any LV2 plugins)
@@ -807,8 +801,62 @@ end
 -- TARGET DETECTION (Called on script activation)
 ------------------------------------------------------
 
+local function detect_fx_chain_window()
+  -- Check if JS_ReaScriptAPI is available for window detection
+  if not reaper.JS_Window_FromPoint then
+    return false, nil, nil
+  end
+  
+  local mouse_x, mouse_y = reaper.GetMousePosition()
+  local hwnd = reaper.JS_Window_FromPoint(mouse_x, mouse_y)
+  
+  if hwnd then
+    local title = reaper.JS_Window_GetTitle(hwnd)
+    if title and title:match("^FX:") then
+      -- Extract track name from FX window title
+      local track_name = title:match("^FX: (.+)")
+      if track_name then
+        -- Find the track by name
+        if track_name == "MASTER" then
+          return true, reaper.GetMasterTrack(0), "master"
+        else
+          -- Search for track by name
+          local track_count = reaper.CountTracks(0)
+          for i = 0, track_count - 1 do
+            local track = reaper.GetTrack(0, i)
+            local _, current_track_name = reaper.GetTrackName(track)
+            if current_track_name == track_name then
+              return true, track, "track"
+            end
+          end
+        end
+      end
+    end
+  end
+  
+  return false, nil, nil
+end
+
 local function detect_and_set_target()
   local mouse_x, mouse_y = reaper.GetMousePosition()
+  
+  -- First, check if hovering over an FX chain window
+  local is_fx_chain, fx_chain_track, fx_chain_mode = detect_fx_chain_window()
+  if is_fx_chain then
+    target_track = fx_chain_track
+    target_item = nil
+    insert_mode = fx_chain_mode
+    
+    if fx_chain_mode == "master" then
+      target_info = "FX Chain: Master Track"
+    else
+      local _, track_name = reaper.GetTrackName(fx_chain_track)
+      target_info = "FX Chain: " .. (track_name or "Unnamed")
+    end
+    return
+  end
+  
+  -- Standard detection logic
   local item = reaper.GetItemFromPoint(mouse_x, mouse_y, true)
   local track = reaper.GetTrackFromPoint(mouse_x, mouse_y)
   
@@ -840,7 +888,7 @@ end
 -- FX INSERTION
 ------------------------------------------------------
 
-local function insert_fx(fx)
+local function insert_fx(fx, insert_to_input_fx)
   if not fx then 
     return false 
   end
@@ -850,58 +898,68 @@ local function insert_fx(fx)
   local fx_index = -1
   
   if insert_mode == "track" and target_track then
-    fx_index = reaper.TrackFX_AddByName(target_track, fx_name, false, -1)
-    
-    if fx_index >= 0 then
-      -- Show FX window based on settings
-      if settings.fx_window_mode == 1 then
-        -- Auto float window
-        reaper.TrackFX_Show(target_track, fx_index, 3) -- 3 = float and bring to front
-      elseif settings.fx_window_mode == 2 then
-        -- Show in chain window
-        reaper.TrackFX_Show(target_track, fx_index, 1) -- 1 = show in chain
-      end
-      -- fx_window_mode == 0 means no window (do nothing)
+    if insert_to_input_fx then
+      -- Insert to Input FX (using recIntoIndex = true)
+      fx_index = reaper.TrackFX_AddByName(target_track, fx_name, true, -1)
       
-      return true
+      if fx_index >= 0 then
+        -- Show FX window based on settings (Input FX uses negative indices for display)
+        local input_fx_index = -1000 - fx_index
+        if settings.fx_window_mode == 1 then
+          -- Auto float window
+          reaper.TrackFX_Show(target_track, input_fx_index, 3)
+        elseif settings.fx_window_mode == 2 then
+          -- Show in chain window
+          reaper.TrackFX_Show(target_track, input_fx_index, 1)
+        end
+        return true
+      end
     else
-      -- Try alternative insertion methods
+      -- Insert to main FX chain
+      fx_index = reaper.TrackFX_AddByName(target_track, fx_name, false, -1)
       
-      -- Method 1: Try with just the filename
-      if fx.filename and fx.filename ~= fx_name then
-        fx_index = reaper.TrackFX_AddByName(target_track, fx.filename, false, -1)
-        if fx_index >= 0 then
-          -- Show FX window based on settings
-          if settings.fx_window_mode == 1 then
-            reaper.TrackFX_Show(target_track, fx_index, 3)
-          elseif settings.fx_window_mode == 2 then
-            reaper.TrackFX_Show(target_track, fx_index, 1)
-          end
-          return true
+      if fx_index >= 0 then
+        -- Show FX window based on settings
+        if settings.fx_window_mode == 1 then
+          -- Auto float window
+          reaper.TrackFX_Show(target_track, fx_index, 3) -- 3 = float and bring to front
+        elseif settings.fx_window_mode == 2 then
+          -- Show in chain window
+          reaper.TrackFX_Show(target_track, fx_index, 1) -- 1 = show in chain
         end
+        -- fx_window_mode == 0 means no window (do nothing)
+        
+        return true
       end
-      
-      -- Method 2: Try with just the plugin name
-      if fx.name and fx.name ~= fx_name then
-        fx_index = reaper.TrackFX_AddByName(target_track, fx.name, false, -1)
-        if fx_index >= 0 then
-          -- Show FX window based on settings
-          if settings.fx_window_mode == 1 then
-            reaper.TrackFX_Show(target_track, fx_index, 3)
-          elseif settings.fx_window_mode == 2 then
-            reaper.TrackFX_Show(target_track, fx_index, 1)
-          end
-          return true
-        end
+    end
+    
+    -- Try alternative insertion methods if the first attempt failed
+    local alternative_names = {fx.filename, fx.name}
+    
+    -- Add name without extension
+    if fx_name then
+      local name_no_ext = fx_name:gsub("%.%w+$", "") -- Remove file extension
+      if name_no_ext ~= fx_name then
+        table.insert(alternative_names, name_no_ext)
       end
-      
-      -- Method 3: Try without file extension
-      if fx_name then
-        local name_no_ext = fx_name:gsub("%.%w+$", "") -- Remove file extension
-        if name_no_ext ~= fx_name then
-          fx_index = reaper.TrackFX_AddByName(target_track, name_no_ext, false, -1)
+    end
+    
+    for _, alt_name in ipairs(alternative_names) do
+      if alt_name and alt_name ~= fx_name then
+        if insert_to_input_fx then
+          fx_index = reaper.TrackFX_AddByName(target_track, alt_name, true, -1)
           if fx_index >= 0 then
-            -- Show FX window based on settings
+            local input_fx_index = -1000 - fx_index
+            if settings.fx_window_mode == 1 then
+              reaper.TrackFX_Show(target_track, input_fx_index, 3)
+            elseif settings.fx_window_mode == 2 then
+              reaper.TrackFX_Show(target_track, input_fx_index, 1)
+            end
+            return true
+          end
+        else
+          fx_index = reaper.TrackFX_AddByName(target_track, alt_name, false, -1)
+          if fx_index >= 0 then
             if settings.fx_window_mode == 1 then
               reaper.TrackFX_Show(target_track, fx_index, 3)
             elseif settings.fx_window_mode == 2 then
@@ -911,24 +969,39 @@ local function insert_fx(fx)
           end
         end
       end
-      
-      return false
     end
     
+    return false
+    
   elseif insert_mode == "master" and target_track then
-    fx_index = reaper.TrackFX_AddByName(target_track, fx_name, false, -1)
-    if fx_index >= 0 then
-      -- Show FX window based on settings
-      if settings.fx_window_mode == 1 then
-        reaper.TrackFX_Show(target_track, fx_index, 3)
-      elseif settings.fx_window_mode == 2 then
-        reaper.TrackFX_Show(target_track, fx_index, 1)
+    if insert_to_input_fx then
+      -- Master track Input FX
+      fx_index = reaper.TrackFX_AddByName(target_track, fx_name, true, -1)
+      if fx_index >= 0 then
+        local input_fx_index = -1000 - fx_index
+        if settings.fx_window_mode == 1 then
+          reaper.TrackFX_Show(target_track, input_fx_index, 3)
+        elseif settings.fx_window_mode == 2 then
+          reaper.TrackFX_Show(target_track, input_fx_index, 1)
+        end
+        return true
       end
-      return true
+    else
+      -- Master track main FX
+      fx_index = reaper.TrackFX_AddByName(target_track, fx_name, false, -1)
+      if fx_index >= 0 then
+        if settings.fx_window_mode == 1 then
+          reaper.TrackFX_Show(target_track, fx_index, 3)
+        elseif settings.fx_window_mode == 2 then
+          reaper.TrackFX_Show(target_track, fx_index, 1)
+        end
+        return true
+      end
     end
     return false
     
   elseif insert_mode == "item" and target_item then
+    -- Items don't have Input FX, so ignore the input FX flag
     local take = reaper.GetActiveTake(target_item)
     if take then
       fx_index = reaper.TakeFX_AddByName(take, fx_name, -1)
@@ -1211,8 +1284,12 @@ local function draw_fx_list()
       for i, fx in ipairs(filtered_fx) do
         local display_name = fx.name
         
+        -- Check if Shift key is held for Input FX insertion
+        local shift_held = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or 
+                          reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
+        
         if reaper.ImGui_Selectable(ctx, display_name) then
-          local insertion_result = insert_fx(fx)
+          local insertion_result = insert_fx(fx, shift_held)
           
           if insertion_result then
             -- Handle auto-close setting
@@ -1224,9 +1301,17 @@ local function draw_fx_list()
           end
         end
         
-        -- Tooltip with full path
+        -- Enhanced tooltip with modifier key info
         if reaper.ImGui_IsItemHovered(ctx) then
-          reaper.ImGui_SetTooltip(ctx, fx.path or fx.full_name)
+          local tooltip_text = fx.path or fx.full_name
+          if insert_mode == "track" or insert_mode == "master" then
+            if shift_held then
+              tooltip_text = tooltip_text .. "\n\n[Shift] Insert to Input FX"
+            else
+              tooltip_text = tooltip_text .. "\n\nHold [Shift] to insert to Input FX"
+            end
+          end
+          reaper.ImGui_SetTooltip(ctx, tooltip_text)
         end
       end
     end
@@ -1242,6 +1327,10 @@ local function draw_status_bar()
   local current_fx_list = selected_folder ~= "" and fx_data[selected_folder] or {}
   local total_fx = #current_fx_list
   local filtered_count = #filtered_fx
+  
+  -- Check if Shift key is held for Input FX mode indicator
+  local shift_held = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or 
+                    reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
   
   if selected_folder == "" then
     reaper.ImGui_Text(ctx, "| No folder selected")
@@ -1259,6 +1348,12 @@ local function draw_status_bar()
     end
   else
     reaper.ImGui_Text(ctx, string.format("| Total: %d FX", total_fx))
+  end
+  
+  -- Show Input FX mode indicator
+  if (insert_mode == "track" or insert_mode == "master") and shift_held then
+    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_Text(ctx, "| [SHIFT] INPUT FX MODE")
   end
 end
 
