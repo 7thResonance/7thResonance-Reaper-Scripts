@@ -5,7 +5,6 @@
 @changelog - Text frield is focused for easier searching
 @donation https://paypal.me/7thresonance
 @about Opens GUI for track, item or master under cursor with GUI to select FX
-    - Only supports VST2, VST3 and CLAP. (no AU, LV2 or JS) (I dont have mac or any LV2 plugins)
     - Saves position and size of GUI
     - Cache for quick search. Updates when new plugins are installed
     - Settings for basic options
