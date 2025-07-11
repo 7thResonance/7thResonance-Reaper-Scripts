@@ -4,6 +4,8 @@
 @version 2.1
 @changelog - Shift modifier to add to input FX`
      - hovering on FX chain window adds to track (use global shortcut for non focused hover)
+@screenshot https://i.postimg.cc/DyqgzknJ/Screenshot-2025-07-11-062605.png
+    https://i.postimg.cc/3JM17J5Q/Screenshot-2025-07-11-062614.png
 @donation https://paypal.me/7thresonance
 @about Opens GUI for track, item or master under cursor with GUI to select FX
     - Only supports VST2, VST3 and CLAP. (no AU, LV2 or JS) (I dont have mac or any LV2 plugins)
