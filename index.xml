@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="f41c6b331fdb5d81d7797aaba98f69939adce34f">
+<index version="1" name="7thResonance's Reaper Scripts" commit="82beca691b1c9ae8b42f83bc898af6907cb40e52">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -241,6 +241,10 @@ Doesnt create send if folder.]]></changelog>
       <version name="1.7" author="7thResonance" time="2025-07-12T16:37:06Z">
         <changelog><![CDATA[- added recording detection to create send when midi is recorded.]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/f41c6b331fdb5d81d7797aaba98f69939adce34f/Utilities/7R%20MIDI%20AutoSend.lua</source>
+      </version>
+      <version name="1.8" author="7thResonance" time="2025-07-12T17:02:52Z">
+        <changelog><![CDATA[- added media item changes for detection]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/82beca691b1c9ae8b42f83bc898af6907cb40e52/Utilities/7R%20MIDI%20AutoSend.lua</source>
       </version>
     </reapack>
     <reapack name="7R Track Template Inserter (GUI).lua" type="script" desc="7R Track Template Inserter (GUI)">
