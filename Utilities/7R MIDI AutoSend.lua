@@ -1,8 +1,8 @@
 --[[
 @description 7R MIDI Auto Send for CC Feedback
 @author 7thResonance
-@version 1.7
-@changelog - added recording detection to create send when midi is recorded.
+@version 1.8
+@changelog - added media item changes for detection
 @link Youtube Video https://www.youtube.com/watch?v=u1325Y-tJZQ
 @donation https://paypal.me/7thresonance
 @about MIDI Auto Send from selected track to Specific track
@@ -98,17 +98,11 @@ function trackEligibleForSend(track)
     return true
 end
 
--- Project state change detection
-function getProjectChangeCounter()
-    -- This is a hidden global that increments every time the project changes (like undo/redo, item moves, etc.)
-    -- Used for efficient polling.
-    return reaper.GetProjectStateChangeCount and reaper.GetProjectStateChangeCount(0) or 0
-end
-
-
 lastSelectedTrack = nil
 lastRunTime = 0
 lastIsRecording = reaper.GetPlayState() & 4 == 4
+lastItemCount = 0
+
 
 
 function monitorTrackSelection()
@@ -130,8 +124,16 @@ function monitorTrackSelection()
     local recordingJustStopped = lastIsRecording and not isRecording
     lastIsRecording = isRecording
 
-    -- Only act if the selection has changed or recording just stopped
-    if selectedTrack ~= lastSelectedTrack or recordingJustStopped then
+    -- Detect if a new media item was added to the selected track
+    local itemCount = 0
+    if selectedTrack then
+        itemCount = reaper.CountTrackMediaItems(selectedTrack)
+    end
+    local itemCountIncreased = (selectedTrack == lastSelectedTrack) and (itemCount > lastItemCount)
+    lastItemCount = itemCount
+
+    -- Only act if the selection has changed, recording just stopped, or a new item was added
+    if selectedTrack ~= lastSelectedTrack or recordingJustStopped or itemCountIncreased then
         -- Remove MIDI sends from the previously selected track
         if lastSelectedTrack and reaper.ValidatePtr2(0, lastSelectedTrack, "MediaTrack*") then
             removeMIDISends(lastSelectedTrack, feedbackTrack)
@@ -151,8 +153,9 @@ function monitorTrackSelection()
             end
         end
 
-        -- Update the last selected track
+        -- Update the last selected track and item count
         lastSelectedTrack = selectedTrack
+        lastItemCount = itemCount
     end
 
     reaper.defer(monitorTrackSelection)
