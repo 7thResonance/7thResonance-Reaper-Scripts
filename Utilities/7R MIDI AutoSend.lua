@@ -1,8 +1,8 @@
 --[[
 @description 7R MIDI Auto Send for CC Feedback
 @author 7thResonance
-@version 1.6
-@changelog - only monitors trach channge, other chnages no longer recreate sends.
+@version 1.7
+@changelog - added recording detection to create send when midi is recorded.
 @link Youtube Video https://www.youtube.com/watch?v=u1325Y-tJZQ
 @donation https://paypal.me/7thresonance
 @about MIDI Auto Send from selected track to Specific track
@@ -105,8 +105,11 @@ function getProjectChangeCounter()
     return reaper.GetProjectStateChangeCount and reaper.GetProjectStateChangeCount(0) or 0
 end
 
+
 lastSelectedTrack = nil
 lastRunTime = 0
+lastIsRecording = reaper.GetPlayState() & 4 == 4
+
 
 function monitorTrackSelection()
     local currentTime = reaper.time_precise()
@@ -122,8 +125,13 @@ function monitorTrackSelection()
     -- Get the currently selected track
     local selectedTrack = reaper.GetSelectedTrack(0, 0)
 
-    -- Only act if the selection has changed
-    if selectedTrack ~= lastSelectedTrack then
+    -- Detect if recording has just stopped
+    local isRecording = (reaper.GetPlayState() & 4) == 4
+    local recordingJustStopped = lastIsRecording and not isRecording
+    lastIsRecording = isRecording
+
+    -- Only act if the selection has changed or recording just stopped
+    if selectedTrack ~= lastSelectedTrack or recordingJustStopped then
         -- Remove MIDI sends from the previously selected track
         if lastSelectedTrack and reaper.ValidatePtr2(0, lastSelectedTrack, "MediaTrack*") then
             removeMIDISends(lastSelectedTrack, feedbackTrack)
