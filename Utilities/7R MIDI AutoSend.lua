@@ -1,8 +1,8 @@
 --[[
 @description 7R MIDI Auto Send for CC Feedback
 @author 7thResonance
-@version 1.5
-@changelog - If no midi item is detected, wont create send
+@version 1.6
+@changelog - only monitors trach channge, other chnages no longer recreate sends.
 @link Youtube Video https://www.youtube.com/watch?v=u1325Y-tJZQ
 @donation https://paypal.me/7thresonance
 @about MIDI Auto Send from selected track to Specific track
@@ -105,10 +105,8 @@ function getProjectChangeCounter()
     return reaper.GetProjectStateChangeCount and reaper.GetProjectStateChangeCount(0) or 0
 end
 
-lastProjectChangeCount = getProjectChangeCounter()
 lastSelectedTrack = nil
 lastRunTime = 0
-cachedEligibility = {}
 
 function monitorTrackSelection()
     local currentTime = reaper.time_precise()
@@ -118,41 +116,24 @@ function monitorTrackSelection()
     end
     lastRunTime = currentTime
 
-    -- Detect project change for eligibility re-evaluation
-    local projectChangeCount = getProjectChangeCounter()
-    local forceRecheckEligibility = false
-    if projectChangeCount ~= lastProjectChangeCount then
-        lastProjectChangeCount = projectChangeCount
-        cachedEligibility = {} -- Invalidate all cached results
-        forceRecheckEligibility = true
-    end
-
     -- Ensure "Hardware Feedback Track" exists
     local feedbackTrack = ensureHardwareFeedbackTrack()
-  
+
     -- Get the currently selected track
     local selectedTrack = reaper.GetSelectedTrack(0, 0)
-    local selectedTrackPtr = tostring(selectedTrack) -- for cache key
-  
-    -- If the selection has changed
-    if selectedTrack ~= lastSelectedTrack or forceRecheckEligibility then
+
+    -- Only act if the selection has changed
+    if selectedTrack ~= lastSelectedTrack then
         -- Remove MIDI sends from the previously selected track
         if lastSelectedTrack and reaper.ValidatePtr2(0, lastSelectedTrack, "MediaTrack*") then
             removeMIDISends(lastSelectedTrack, feedbackTrack)
         end
 
         -- Set up MIDI send for the newly selected track, but only if it's not a folder track and meets eligibility
----@diagnostic disable-next-line: redundant-parameter
         if selectedTrack and reaper.GetTrackName(selectedTrack, "") ~= "Hardware Feedback Track" then
             local isFolder = reaper.GetMediaTrackInfo_Value(selectedTrack, "I_FOLDERDEPTH")
             if isFolder <= 0 then -- Only proceed if not a folder track (folder depth <= 0)
-                -- Eligibility caching for current project state
-                local eligible = cachedEligibility[selectedTrackPtr]
-                if eligible == nil or forceRecheckEligibility then
-                    eligible = trackEligibleForSend(selectedTrack)
-                    cachedEligibility[selectedTrackPtr] = eligible
-                end
-                if eligible then
+                if trackEligibleForSend(selectedTrack) then
                     removeMIDISends(selectedTrack, feedbackTrack) -- Clean any existing sends
                     setupMIDISend(selectedTrack, feedbackTrack)
                 else
@@ -165,7 +146,7 @@ function monitorTrackSelection()
         -- Update the last selected track
         lastSelectedTrack = selectedTrack
     end
-  
+
     reaper.defer(monitorTrackSelection)
 end
 
