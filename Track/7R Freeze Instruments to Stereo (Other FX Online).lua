@@ -1,9 +1,9 @@
 --[[
 @description 7R Freeze Instruments to Stereo (Other FX Online)
 @author 7thResonance
-@version 1.2
+@version 1.3
 @donation https://paypal.me/7thresonance
-@changelog -Names item to Track name + Frozen $freezecounter (hides the 1)
+@changelog -Removed the channel count edit. Uses native freeze function anyway
 @about Freezes Selected tracks. up to Instrument, Other FX are brough online after freezing.
 
     Lua Script for Reaper: Offline non-instrument FX, Freeze Selected Tracks to Stereo, Unlock All Items Directly, Online Remaining FX
@@ -123,7 +123,7 @@ local function main()
     reaper.Main_OnCommand(40289, 0) -- Unselect all tracks
     for _, track in ipairs(selected_tracks) do
         reaper.SetTrackSelected(track, true)
-        reaper.SetMediaTrackInfo_Value(track, "I_NCHAN", 2) -- Set to stereo
+        -- reaper.SetMediaTrackInfo_Value(track, "I_NCHAN", 2) -- Set to stereo
     end
     reaper.Main_OnCommand(41223, 0) -- Freeze selected tracks to stereo
 
