@@ -1,8 +1,8 @@
 --[[
 @description 7R Insert FX Based on Selection under Mouse cursor (Track or Item, Master)
 @author 7thResonance
-@version 2.3
-@changelog - Text frield is focused for easier searching
+@version 2.4
+@changelog - Allows for arrow keys to highlight FX, Enter to insert FX.
 @donation https://paypal.me/7thresonance
 @about Opens GUI for track, item or master under cursor with GUI to select FX
     - Saves position and size of GUI
@@ -30,6 +30,8 @@ local selected_folder = "" -- Start with no folder selected
 local fx_data = {}
 local folder_list = {}
 local filtered_fx = {}
+local highlighted_fx_index = 1 -- For keyboard navigation
+local arrow_key_pressed = false -- Track if arrow key was pressed before Enter
 local target_track = nil
 local target_item = nil
 local insert_mode = "track" -- "track", "item", or "master"
@@ -1156,45 +1158,42 @@ end
 
 local function draw_fx_list()
   reaper.ImGui_SameLine(ctx)
-  
   local available_width = reaper.ImGui_GetContentRegionAvail(ctx)
-  
   if reaper.ImGui_BeginChild(ctx, "FXList", 0, -50) then
     if selected_folder == "" then
       reaper.ImGui_Text(ctx, "Select a folder to view plugins")
     else
-      -- Show cleaner folder name for display
       local display_folder = selected_folder
       if selected_folder:match("^Dev: ") then
         display_folder = selected_folder:gsub("^Dev: ", "") .. " (Developer)"
       end
-      
       reaper.ImGui_Text(ctx, "Plugins in " .. display_folder .. ":")
       reaper.ImGui_Separator(ctx)
-      
       local current_fx_list = fx_data[selected_folder] or {}
-      
-      -- If search_all_folders is enabled and there's a search term, search from "All FX" folder only
       if settings.search_all_folders and search_text ~= "" then
         if fx_data["All FX"] then
           current_fx_list = fx_data["All FX"]
         end
       end
-      
       filtered_fx = filter_fx(current_fx_list, search_text)
-      
+      -- Clamp highlighted_fx_index to valid range
+      if #filtered_fx == 0 then
+        highlighted_fx_index = 1
+      elseif highlighted_fx_index > #filtered_fx then
+        highlighted_fx_index = #filtered_fx
+      elseif highlighted_fx_index < 1 then
+        highlighted_fx_index = 1
+      end
       for i, fx in ipairs(filtered_fx) do
         local display_name = fx.name
-        
-        -- Check if Shift key is held for Input FX insertion
         local shift_held = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or 
                           reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
-        
-        if reaper.ImGui_Selectable(ctx, display_name) then
+        local is_selected = (i == highlighted_fx_index)
+        if reaper.ImGui_Selectable(ctx, display_name, is_selected) then
+          highlighted_fx_index = i
+          arrow_key_pressed = true
           local insertion_result = insert_fx(fx, shift_held)
-          
           if insertion_result then
-            -- Handle auto-close setting
             if settings.auto_close_on_insert then
               window_open = false
             end
@@ -1202,16 +1201,11 @@ local function draw_fx_list()
             reaper.ShowMessageBox("Failed to insert FX: " .. fx.name, "Error", 0)
           end
         end
-        
-        -- Enhanced tooltip with modifier key info
         if reaper.ImGui_IsItemHovered(ctx) then
           local tooltip_text = fx.path or fx.full_name
-          
-          -- Add plugin type to tooltip if available
           if fx.plugin_type and fx.plugin_type ~= "" then
             tooltip_text = "Type: " .. fx.plugin_type .. "\nPath: " .. tooltip_text
           end
-          
           if insert_mode == "track" or insert_mode == "master" then
             if shift_held then
               tooltip_text = tooltip_text .. "\n\n[Shift] Insert to Input FX"
@@ -1462,33 +1456,51 @@ end
 
 local function main_loop()
   if not window_open then return end
-  
   -- Periodic check for updates (every second)
   local current_time = reaper.time_precise() * 1000
   if current_time - last_update_check > update_check_interval then
     last_update_check = current_time
-    
-    -- Only check if we're not already scanning
     if not background_scan_running and is_cache_outdated() then
       reaper.defer(function()
         background_scan_vst()
       end)
     end
   end
-  
+  -- Keyboard navigation for FX list
+  if #filtered_fx > 0 then
+    if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_UpArrow()) then
+      highlighted_fx_index = highlighted_fx_index - 1
+      if highlighted_fx_index < 1 then highlighted_fx_index = #filtered_fx end
+      arrow_key_pressed = true
+    elseif reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_DownArrow()) then
+      highlighted_fx_index = highlighted_fx_index + 1
+      if highlighted_fx_index > #filtered_fx then highlighted_fx_index = 1 end
+      arrow_key_pressed = true
+    end
+    if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) then
+      local fx_to_insert = filtered_fx[highlighted_fx_index]
+      if not arrow_key_pressed then
+        fx_to_insert = filtered_fx[1]
+      end
+      local shift_held = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
+      local insertion_result = insert_fx(fx_to_insert, shift_held)
+      if insertion_result then
+        if settings.auto_close_on_insert then
+          window_open = false
+        end
+      else
+        reaper.ShowMessageBox("Failed to insert FX: " .. fx_to_insert.name, "Error", 0)
+      end
+      arrow_key_pressed = false
+    end
+  end
   reaper.ImGui_PushFont(ctx, font)
   local gui_open = draw_main_window()
-  
-  -- Only update window_open if it's still true (don't override auto-close)
   if window_open then
     window_open = gui_open
   end
-  
-  -- Draw settings window if open
   draw_settings_window()
-  
   reaper.ImGui_PopFont(ctx)
-  
   if window_open then
     reaper.defer(main_loop)
   end
