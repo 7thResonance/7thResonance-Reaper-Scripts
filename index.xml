@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="a74f393d2d51849ff175924dc5ea95c5936ea7bd">
+<index version="1" name="7thResonance's Reaper Scripts" commit="7048c7a7df27766c850a8a364a2ef20902d0ff69">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -113,6 +113,10 @@
       <version name="2.3" author="7thResonance" time="2025-07-11T09:50:09Z">
         <changelog><![CDATA[- Text frield is focused for easier searching]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/1bace4e141ab72e0aff4afec2f26cfec1cb42d78/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
+      </version>
+      <version name="2.4" author="7thResonance" time="2025-08-01T17:34:45Z">
+        <changelog><![CDATA[- Allows for arrow keys to highlight FX, Enter to insert FX.]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/7048c7a7df27766c850a8a364a2ef20902d0ff69/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
       </version>
     </reapack>
     <reapack name="7R Insert Instrument (Respecting Folders).lua" type="script" desc="7R Insert Instrument (Respecting Folders)">
