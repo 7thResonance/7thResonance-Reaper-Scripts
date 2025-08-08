@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="b60d7c136710e1bf95568d948940c4a620ce260a">
+<index version="1" name="7thResonance's Reaper Scripts" commit="60293cec30b39eb0edaeca718f64f612c1b28f8f">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -142,6 +142,10 @@
         <changelog><![CDATA[- Allows for arrow keys to highlight FX, Enter to insert FX.]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/7048c7a7df27766c850a8a364a2ef20902d0ff69/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
       </version>
+      <version name="2.5" author="7thResonance" time="2025-08-08T13:53:49Z">
+        <changelog><![CDATA[- Imgui Update fix]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/60293cec30b39eb0edaeca718f64f612c1b28f8f/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
+      </version>
     </reapack>
     <reapack name="7R Insert Instrument (Respecting Folders).lua" type="script" desc="7R Insert Instrument (Respecting Folders)">
       <metadata>
@@ -149,7 +153,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Original Folder Respect logic is by Aaron Cendan (Insert New Track Respect Folders) Uses that logic to insert instrument at the start,middle, or end of folders. If no folder is selected, inserts at end of tracks\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Original Folder Respect logic is by Aaron Cendan (Insert New Track Respect Folders) Uses that logic to insert instrument at the start,middle, or end of folders. If no folder or track is selected, inserts at end of tracks\par}
 }
 ]]></description>
         <link rel="screenshot" href="https://i.postimg.cc/W4RTQztz/Screenshot-2025-07-11-143430.png">Window</link>
@@ -160,6 +164,12 @@
       <version name="1.1" author="7thResonance" time="2025-07-11T09:50:09Z">
         <changelog><![CDATA[- Text field is automaticaly focused for easier search.]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/1bace4e141ab72e0aff4afec2f26cfec1cb42d78/Utilities/7R%20Insert%20Instrument%20(Respecting%20Folders).lua</source>
+      </version>
+      <version name="1.2" author="7thResonance" time="2025-08-08T13:53:49Z">
+        <changelog><![CDATA[- Arrow keys for search item navigation
+- Enter to insert highlighted instrument
+- Imgui Fixfor latest update]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/60293cec30b39eb0edaeca718f64f612c1b28f8f/Utilities/7R%20Insert%20Instrument%20(Respecting%20Folders).lua</source>
       </version>
     </reapack>
     <reapack name="7R Insert Project or Take Marker at mouse pointer.lua" type="script" desc="7R Insert Project/Take Marker at mouse pointer">
@@ -239,6 +249,10 @@
         <changelog><![CDATA[- Removed decimal beat values for clarity]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/ad4368b784b0e965a5187e11783dcfb06a8c19f1/Utilities/7R%20Marker%20n%20Region%20Exporter%20(GUI)(Project,%20Take,%20Item%20relative,%20Source%20Relative).lua</source>
       </version>
+      <version name="1.8" author="7thResonance" time="2025-08-08T13:53:49Z">
+        <changelog><![CDATA[- Imgui update Fix]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/60293cec30b39eb0edaeca718f64f612c1b28f8f/Utilities/7R%20Marker%20n%20Region%20Exporter%20(GUI)(Project,%20Take,%20Item%20relative,%20Source%20Relative).lua</source>
+      </version>
     </reapack>
     <reapack name="7R MIDI AutoSend.lua" type="script" desc="7R MIDI Auto Send for CC Feedback">
       <metadata>
@@ -294,6 +308,10 @@ Doesnt create send if folder.]]></changelog>
       <version name="1.0" author="7thResonance" time="2025-07-12T16:22:57Z">
         <changelog><![CDATA[- initial]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/ab10fb955214f2a4f9103054cc8128ee876627fb/Utilities/7R%20Track%20Template%20Inserter%20(GUI).lua</source>
+      </version>
+      <version name="1.1" author="7thResonance" time="2025-08-08T13:53:49Z">
+        <changelog><![CDATA[- Imgui update fix]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/60293cec30b39eb0edaeca718f64f612c1b28f8f/Utilities/7R%20Track%20Template%20Inserter%20(GUI).lua</source>
       </version>
     </reapack>
   </category>
