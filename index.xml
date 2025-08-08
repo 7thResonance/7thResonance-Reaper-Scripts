@@ -333,7 +333,9 @@ Doesnt create send if folder.]]></changelog>
 {\pard \ql \f0 \sa180 \li0 \fi0 Auto send MIDI - Send seelcted track's CC to a track which can be sent back to motorized faders.\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Insert Markers - Based on mousepointer. Either on the ruler,or on the item itself.\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Freeze Instrument - Auto bypass FX and only freeze Instruments.\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Insert FX Based on Selection - Open add FX window based on the mouse cursor postition (Track or Items)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Insert FX based on selection - Open add FX window based on the mouse cursor postition (Track, Item, Master)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Insert instrument based on track Selection - GUI to add instruments (Respects Folders)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Insert Track Templates - GUI to add template tracks\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Control Sends of Selected Track - Allows to control send volume of many tracks at once\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Adds [Frozen] to Frozen Track's Name - Add ' [Frozen] to Frozen tracks, removes it when thawed\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Marker Exporter - GUI to export Project/Take Markers and Regions.\par}
