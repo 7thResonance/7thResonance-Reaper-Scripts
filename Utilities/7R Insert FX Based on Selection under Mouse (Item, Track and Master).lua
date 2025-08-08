@@ -1,8 +1,8 @@
 --[[
 @description 7R Insert FX Based on Selection under Mouse cursor (Track or Item, Master)
 @author 7thResonance
-@version 2.4
-@changelog - Allows for arrow keys to highlight FX, Enter to insert FX.
+@version 2.5
+@changelog - Imgui Update fix
 @donation https://paypal.me/7thresonance
 @about Opens GUI for track, item or master under cursor with GUI to select FX
     - Saves position and size of GUI
@@ -1494,7 +1494,7 @@ local function main_loop()
       arrow_key_pressed = false
     end
   end
-  reaper.ImGui_PushFont(ctx, font)
+  reaper.ImGui_PushFont(ctx, font, 14)
   local gui_open = draw_main_window()
   if window_open then
     window_open = gui_open

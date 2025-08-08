@@ -1,9 +1,9 @@
 --[[
 @description 7R Marker n Region Exporter (Project/Take/Regions)
 @author 7thResonance
-@version 1.7
+@version 1.8
 @changelog
-  - Removed decimal beat values for clarity
+  - Imgui update Fix
 @donation https://paypal.me/7thresonance
 @about GUI for exporting project and take markers and Regions in various formats.
   - HH:MM:SS
@@ -970,7 +970,7 @@ end
 local function loop()
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_TITLE, true, reaper.ImGui_WindowFlags_AlwaysAutoResize())
   if visible then
-    reaper.ImGui_PushFont(ctx, font)
+    reaper.ImGui_PushFont(ctx, font, 14)
     reaper.ImGui_Text(ctx, "Marker & Region Export Options")
     reaper.ImGui_PopFont(ctx)
 

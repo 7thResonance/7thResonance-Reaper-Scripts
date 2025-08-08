@@ -1,11 +1,14 @@
 --[[
 @description 7R Insert Instrument (Respecting Folders)
 @author 7thResonance
-@version 1.1
-@changelog - Text field is automaticaly focused for easier search.
+@version 1.2
+@changelog
+     - Arrow keys for search item navigation
+     - Enter to insert highlighted instrument
+     - Imgui Fixfor latest update
 @about Original Folder Respect logic is by Aaron Cendan (Insert New Track Respect Folders)
   Uses that logic to insert instrument at the start,middle, or end of folders.
-  If no folder is selected, inserts at end of tracks
+  If no folder or track is selected, inserts at end of tracks
 @screenshot Window https://i.postimg.cc/W4RTQztz/Screenshot-2025-07-11-143430.png
 --]]
 
@@ -25,6 +28,7 @@ local search_text = ""
 local instrument_list = {}
 local filtered_instruments = {}
 local selected_instrument = nil
+local selected_index = 1
 
 -- Add string trim function
 string.trim = string.trim or function(s)
@@ -488,22 +492,55 @@ end
 function draw_search_box()
   reaper.ImGui_Text(ctx, "Search Instruments:")
   reaper.ImGui_SameLine(ctx)
-  
-  -- Auto-focus the search field when window first opens
+
+  local input_flags = reaper.ImGui_InputTextFlags_CallbackAlways()
+
   if reaper.ImGui_IsWindowAppearing(ctx) then
     reaper.ImGui_SetKeyboardFocusHere(ctx)
   end
-  
-  local changed, new_text = reaper.ImGui_InputText(ctx, "##search", search_text)
+
+  -- Always maintain focus manually
+  reaper.ImGui_PushID(ctx, "SearchBox")
+  local changed, new_text = reaper.ImGui_InputText(ctx, "##search", search_text, input_flags)
+  reaper.ImGui_PopID(ctx)
+
   if changed then
     search_text = new_text
     filtered_instruments = filter_instruments(instrument_list, search_text)
+    selected_index = 1
+    selected_instrument = filtered_instruments[selected_index] or nil
   end
-  
-  -- Show count
+
+  -- === SAFELY HANDLE KEYBOARD WITHOUT LOSING FOCUS ===
+  -- Prevent ImGui from handling navigation
+  if reaper.ImGui_IsItemActive(ctx) or reaper.ImGui_IsWindowFocused(ctx) then
+    local down = reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_DownArrow(), false)
+    local up = reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_UpArrow(), false)
+    local enter = reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter(), false)
+
+    if down and #filtered_instruments > 0 then
+      selected_index = math.min(selected_index + 1, #filtered_instruments)
+      selected_instrument = filtered_instruments[selected_index]
+      -- Re-focus search field
+      reaper.ImGui_SetKeyboardFocusHere(ctx)
+    elseif up and #filtered_instruments > 0 then
+      selected_index = math.max(selected_index - 1, 1)
+      selected_instrument = filtered_instruments[selected_index]
+      -- Re-focus search field
+      reaper.ImGui_SetKeyboardFocusHere(ctx)
+    elseif enter and filtered_instruments[selected_index] then
+      if insert_instrument(filtered_instruments[selected_index]) then
+        if settings.auto_close_on_insert then
+          window_open = false
+        end
+      end
+    end
+  end
+
   reaper.ImGui_SameLine(ctx)
   reaper.ImGui_Text(ctx, string.format("(%d/%d)", #filtered_instruments, #instrument_list))
 end
+
 
 function draw_instrument_list()
   if reaper.ImGui_BeginChild(ctx, "InstrumentList", 0, -80) then
@@ -516,9 +553,10 @@ function draw_instrument_list()
       end
     else
       for i, instrument in ipairs(filtered_instruments) do
-        local is_selected = (selected_instrument == instrument)
+        local is_selected = (i == selected_index)
         
         if reaper.ImGui_Selectable(ctx, instrument.name, is_selected) then
+          selected_index = i
           selected_instrument = instrument
         end
         
@@ -639,7 +677,7 @@ function main_loop()
     return 
   end
   
-  reaper.ImGui_PushFont(ctx, font)
+  reaper.ImGui_PushFont(ctx, font, 14)
   local gui_open = draw_main_window()
   reaper.ImGui_PopFont(ctx)
   

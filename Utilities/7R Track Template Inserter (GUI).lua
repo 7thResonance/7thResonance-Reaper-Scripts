@@ -1,12 +1,12 @@
 --[[
 @description 7R Track Template Inserter (GUI)
 @author 7thResonance
-@version 1.0
+@version 1.1
 @about
   Browse and insert REAPER track templates organized in a tree structure
   matching the folder hierarchy in the TrackTemplates directory.
   Double-click to insert track templates into the current project.
-@changelog - initial
+@changelog - Imgui update fix
 @donation https://paypal.me/7thresonance
 @screenshot Window https://i.postimg.cc/Y25QbqXX/Screenshot-2025-07-12-213753.png
 --]]
@@ -661,7 +661,7 @@ local function main_loop()
     return 
   end
   
-  reaper.ImGui_PushFont(ctx, font)
+  reaper.ImGui_PushFont(ctx, font, 14)
   local gui_open = draw_main_window()
   reaper.ImGui_PopFont(ctx)
   
