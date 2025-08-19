@@ -19,19 +19,19 @@ Donation https://paypal.me/7thresonance
 
 Scripts;
 
-Auto send MIDI - Send seelcted track's CC to a track which can be sent back to motorized faders.
+Auto send MIDI - Send selected track's CC to a track which can be sent back to motorized faders.
 
-Insert Markers - Based on mousepointer. Either on the ruler,or on the item itself.
+Insert Markers - Based on mouse pointer. Either on the ruler or on the item itself.
 
 Freeze Instrument - Auto bypass FX and only freeze Instruments.
 
 Insert FX based on selection - Open add FX window based on the mouse cursor postition (Track, Item, Master)
 
-Insert instrument based on track Selection - GUI to add instruments (Respects Folders)
+Insert Instrument based on track Selection - GUI to add instruments (Respects Folders)
 
 Insert Track Templates - GUI to add template tracks
 
-Control Sends of Selected Track - Allows to control send volume of many tracks at once
+Control Sends of Selected Track - Allows controlling send volume of many tracks at once
 
 Adds [Frozen] to Frozen Track's Name - Add ' [Frozen] to Frozen tracks, removes it when thawed
 
