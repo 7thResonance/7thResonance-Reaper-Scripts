@@ -383,9 +383,11 @@ local function SortFoldersINI(fav_str)
             else
                 add = false
             end
-            settings.last_left_section = "all"
-            settings.last_left_value = ""
-            save_settings()
+            if settings then
+                settings.last_left_section = "all"
+                settings.last_left_value = ""
+                if save_settings then save_settings() end
+            end
         end
         if folders[#folders] and not category and add then
             folders[#folders][#folders[#folders] + 1] = line .. "\n"
@@ -715,18 +717,17 @@ local target_item = nil
 local insert_mode = "track" -- "track", "item", or "master"
 local target_info = ""
 
-local settings = {
-  auto_close_on_insert = true,
-  hide_vst2_duplicates = true,   -- Hide VST2 if VST3 version exists
-  search_all_folders = false,    -- Placeholder for future search behavior
-  fx_window_mode = 1,            -- 0 = No window, 1 = FX window (float), 2 = Chain window
-  window_x = -1,
-  window_y = -1,
-  window_width = 800,
-  window_height = 600,
-  last_left_section = "all",     -- "all" | "folder" | "dev"
-  last_left_value = "",          -- Folder name or developer name
-}
+settings = settings or {}
+settings.auto_close_on_insert = settings.auto_close_on_insert ~= nil and settings.auto_close_on_insert or true
+settings.hide_vst2_duplicates = settings.hide_vst2_duplicates ~= nil and settings.hide_vst2_duplicates or true   -- Hide VST2 if VST3 version exists
+settings.search_all_folders   = settings.search_all_folders   ~= nil and settings.search_all_folders   or false  -- Placeholder for future search behavior
+settings.fx_window_mode       = settings.fx_window_mode       ~= nil and settings.fx_window_mode       or 1      -- 0 = No window, 1 = FX window (float), 2 = Chain window
+settings.window_x             = settings.window_x             ~= nil and settings.window_x             or -1
+settings.window_y             = settings.window_y             ~= nil and settings.window_y             or -1
+settings.window_width         = settings.window_width         ~= nil and settings.window_width         or 800
+settings.window_height        = settings.window_height        ~= nil and settings.window_height        or 600
+settings.last_left_section    = settings.last_left_section    ~= nil and settings.last_left_section    or "all"  -- "all" | "folder" | "dev"
+settings.last_left_value      = settings.last_left_value      ~= nil and settings.last_left_value      or ""     -- Folder name or developer name
 
 -- Settings persistence helpers
 local function get_settings_file_path()
