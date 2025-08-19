@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="27c08a47eaca617c8ec38c6b1773b64130931ef5">
+<index version="1" name="7thResonance's Reaper Scripts" commit="c4ed906ebc315e980e65bb92f42fd4e972413014">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -195,6 +195,29 @@
       <version name="1.1" author="7thResonance" time="2025-07-02T13:27:39Z">
         <changelog><![CDATA[Takes item offset into account]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/0013983db67b32741257b015535dcb2b11fd8f0e/Utilities/7R%20Insert%20Project%20or%20Take%20Marker%20at%20mouse%20pointer.lua</source>
+      </version>
+    </reapack>
+    <reapack name="7R Keyswitch Manager.lua" type="script" desc="7R Keyswitch Manager">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Original Script by Ugurcan Orcun; ReaKS - Keyswitch Articulation Manager I have added a few extra features.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Search and load MIDInotename files right inside the script.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Option to Extend already existing (live played or inserted KS notes).\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Autosave window positions and size on close.\sa180\par}
+}
+]]></description>
+        <link rel="screenshot" href="https://i.postimg.cc/xjBRHWP8/Screenshot-2025-08-20-044639.png">Window</link>
+        <link rel="screenshot" href="https://i.postimg.cc/wMR1g4tb/Screenshot-2025-08-20-044443.png">Settings</link>
+        <link rel="screenshot" href="https://i.postimg.cc/XXMpJKdN/Screenshot-2025-08-20-044433.png">Loaded KSs</link>
+        <link rel="screenshot" href="https://i.postimg.cc/Wpd8d2gx/Screenshot-2025-08-20-044509.png">KS Inject</link>
+        <link rel="donation">https://paypal.me/7thresonance</link>
+      </metadata>
+      <version name="1.o" author="7thResonance" time="2025-08-19T23:21:49Z">
+        <changelog><![CDATA[- Initial]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/c4ed906ebc315e980e65bb92f42fd4e972413014/Utilities/7R%20Keyswitch%20Manager.lua</source>
       </version>
     </reapack>
     <reapack name="7R Marker n Region Exporter (GUI)(Project, Take, Item relative, Source Relative).lua" type="script" desc="7R Marker n Region Exporter (Project/Take/Regions)">
