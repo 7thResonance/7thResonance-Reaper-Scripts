@@ -6,6 +6,7 @@
      - Arrow keys for search item navigation
      - Enter to insert highlighted instrument
      - Imgui Fixfor latest update
+@donation https://paypal.me/7thresonance
 @about Original Folder Respect logic is by Aaron Cendan (Insert New Track Respect Folders)
   Uses that logic to insert instrument at the start,middle, or end of folders.
   If no folder or track is selected, inserts at end of tracks

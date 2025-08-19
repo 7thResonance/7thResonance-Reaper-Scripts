@@ -1,12 +1,12 @@
 --[[
 @description 7R Track Template Inserter (GUI)
 @author 7thResonance
-@version 1.1
+@version 1.2
 @about
   Browse and insert REAPER track templates organized in a tree structure
   matching the folder hierarchy in the TrackTemplates directory.
   Double-click to insert track templates into the current project.
-@changelog - Imgui update fix
+@changelog - Search and enter for quick insert
 @donation https://paypal.me/7thresonance
 @screenshot Window https://i.postimg.cc/Y25QbqXX/Screenshot-2025-07-12-213753.png
 --]]
@@ -28,6 +28,7 @@ local template_tree = {}
 local filtered_templates = {}
 local selected_template = nil
 local expanded_folders = {}
+local refocus_search_next_frame = false
 
 -- Add string trim function
 string.trim = string.trim or function(s)
@@ -53,7 +54,7 @@ end
 
 local function save_settings()
   local settings_path = get_settings_file_path()
-  
+
   local file = io.open(settings_path, "w")
   if file then
     file:write("-- Track Template Insert Settings File\n")
@@ -74,15 +75,15 @@ end
 
 local function load_settings()
   local settings_path = get_settings_file_path()
-  
+
   local file = io.open(settings_path, "r")
-  if not file then 
-    return 
+  if not file then
+    return
   end
-  
+
   local content = file:read("*all")
   file:close()
-  
+
   local load_func = load or loadstring
   local success, loaded_settings = pcall(load_func, content)
   if success and type(loaded_settings) == "function" then
@@ -99,13 +100,13 @@ end
 
 local function save_window_state()
   if not ctx then return end
-  
+
   local x, y = reaper.ImGui_GetWindowPos(ctx)
   local w, h = reaper.ImGui_GetWindowSize(ctx)
-  
+
   if x and y and w and h and w > 100 and h > 100 and x > -10000 and y > -10000 then
     local changed = false
-    
+
     if math.abs(settings.window_x - x) > 1 then
       settings.window_x = x
       changed = true
@@ -122,7 +123,7 @@ local function save_window_state()
       settings.window_height = h
       changed = true
     end
-    
+
     if changed then
       save_settings()
     end
@@ -137,7 +138,7 @@ local function get_templates_folder()
   if settings.templates_folder ~= "" then
     return settings.templates_folder
   end
-  
+
   -- Default to REAPER's track templates folder in AppData
   local appdata_path = os.getenv("APPDATA")
   if appdata_path then
@@ -147,17 +148,17 @@ local function get_templates_folder()
       return templates_path
     end
   end
-  
+
   -- Fallback to REAPER resource path
   local resource_path = reaper.GetResourcePath()
   local templates_path = resource_path .. "/TrackTemplates"
-  
+
   -- Check if folder exists
   if reaper.file_exists(templates_path) then
     settings.templates_folder = templates_path
     return templates_path
   end
-  
+
   -- Fallback to user documents if default doesn't exist
   local documents_path = os.getenv("USERPROFILE") or os.getenv("HOME")
   if documents_path then
@@ -167,7 +168,7 @@ local function get_templates_folder()
       return templates_path
     end
   end
-  
+
   -- If nothing found, use the AppData path anyway
   settings.templates_folder = (appdata_path or "") .. "/REAPER/TrackTemplates"
   return settings.templates_folder
@@ -177,18 +178,18 @@ local function scan_folder_recursive(folder_path, relative_path)
   local items = {}
   local folders = {}
   local files = {}
-  
+
   -- Scan for subdirectories
   local dir_index = 0
   while true do
     local subdir = reaper.EnumerateSubdirectories(folder_path, dir_index)
     if not subdir then break end
-    
+
     local subdir_path = folder_path .. "/" .. subdir
     local subdir_relative = relative_path == "" and subdir or (relative_path .. "/" .. subdir)
-    
+
     local subfolder_items = scan_folder_recursive(subdir_path, subdir_relative)
-    
+
     table.insert(folders, {
       name = subdir,
       type = "folder",
@@ -197,34 +198,34 @@ local function scan_folder_recursive(folder_path, relative_path)
       children = subfolder_items,
       expanded = expanded_folders[subdir_relative] or false
     })
-    
+
     dir_index = dir_index + 1
   end
-  
+
   -- Scan for template files
   local file_index = 0
   while true do
     local file = reaper.EnumerateFiles(folder_path, file_index)
     if not file then break end
-    
+
     -- Check if it's a template file (.RTrackTemplate primarily)
     local file_lower = file:lower()
-    if file_lower:match("%.rtracktemplate$") or 
+    if file_lower:match("%.rtracktemplate$") or
        file_lower:match("%.rpp$") then
-      
+
       local file_path = folder_path .. "/" .. file
       local file_relative = relative_path == "" and file or (relative_path .. "/" .. file)
-      
+
       -- Determine template type
       local template_type = "Track"
       if file_lower:match("%.rpp$") then
         template_type = "Project"
       end
-      
+
       -- Clean up the display name
       local display_name = file:gsub("%.rtracktemplate$", "")
                               :gsub("%.rpp$", "")
-      
+
       table.insert(files, {
         name = display_name,
         filename = file,
@@ -235,14 +236,14 @@ local function scan_folder_recursive(folder_path, relative_path)
         file_size = 0 -- Could be populated if needed
       })
     end
-    
+
     file_index = file_index + 1
   end
-  
+
   -- Sort folders and files separately, then combine
   table.sort(folders, function(a, b) return a.name:lower() < b.name:lower() end)
   table.sort(files, function(a, b) return a.name:lower() < b.name:lower() end)
-  
+
   -- Combine folders first, then files
   for _, folder in ipairs(folders) do
     table.insert(items, folder)
@@ -250,25 +251,25 @@ local function scan_folder_recursive(folder_path, relative_path)
   for _, file in ipairs(files) do
     table.insert(items, file)
   end
-  
+
   return items
 end
 
 local function scan_templates()
   local templates_folder = get_templates_folder()
-  
+
   -- Create folder if it doesn't exist
   reaper.RecursiveCreateDirectory(templates_folder, 0)
-  
+
   -- Scan recursively
   local tree = scan_folder_recursive(templates_folder, "")
-  
+
   return tree
 end
 
 local function flatten_templates(tree_items, flattened)
   flattened = flattened or {}
-  
+
   for _, item in ipairs(tree_items) do
     if item.type == "template" then
       table.insert(flattened, item)
@@ -276,18 +277,18 @@ local function flatten_templates(tree_items, flattened)
       flatten_templates(item.children, flattened)
     end
   end
-  
+
   return flattened
 end
 
 local function filter_templates(tree_items, search_term)
-  if search_term == "" then 
+  if search_term == "" then
     return tree_items
   end
-  
+
   local filtered = {}
   local search_lower = search_term:lower()
-  
+
   for _, item in ipairs(tree_items) do
     if item.type == "template" then
       if item.name:lower():find(search_lower, 1, true) then
@@ -308,7 +309,7 @@ local function filter_templates(tree_items, search_term)
       end
     end
   end
-  
+
   return filtered
 end
 
@@ -321,34 +322,34 @@ local function insert_template(template)
     reaper.ShowMessageBox("No template selected", "Error", 0)
     return false
   end
-  
+
   if not reaper.file_exists(template.path) then
     reaper.ShowMessageBox("Template file not found:\n" .. template.path, "Error", 0)
     return false
   end
-  
+
   local success = false
-  
+
   if template.template_type == "Track" then
     -- Get the current track selection to insert after
     local selected_track = reaper.GetSelectedTrack(0, 0)
     local insert_position = selected_track and (reaper.GetMediaTrackInfo_Value(selected_track, "IP_TRACKNUMBER") - 1) or reaper.CountTracks(0)
-    
+
     -- Store current track count
     local track_count_before = reaper.CountTracks(0)
-    
+
     -- Open the track template file as a project to extract its tracks
     reaper.Main_openProject(template.path)
-    
+
     -- Get the track count after opening the template
     local track_count_after = reaper.CountTracks(0)
-    
+
     if track_count_after > track_count_before then
       -- Move the newly inserted tracks to the correct position
       if selected_track and insert_position < track_count_before then
         -- We need to move the tracks to after the selected track
         local tracks_to_move = track_count_after - track_count_before
-        
+
         -- Move each new track to the correct position
         for i = 0, tracks_to_move - 1 do
           local track_to_move = reaper.GetTrack(0, track_count_before + i)
@@ -361,10 +362,10 @@ local function insert_template(template)
           end
         end
       end
-      
+
       success = true
     end
-    
+
   elseif template.template_type == "Project" then
     -- For .RPP files in track templates folder, treat them as projects to extract tracks from
     local choice = reaper.ShowMessageBox(
@@ -376,13 +377,13 @@ local function insert_template(template)
       "Insert Project as Tracks",
       3
     )
-    
+
     if choice == 6 then -- Yes - Insert tracks
       local track_count_before = reaper.CountTracks(0)
-      
+
       -- Open the project file to extract tracks
       reaper.Main_openProject(template.path)
-      
+
       local track_count_after = reaper.CountTracks(0)
       if track_count_after > track_count_before then
         success = true
@@ -395,12 +396,12 @@ local function insert_template(template)
       return false
     end
   end
-  
+
   if success then
     reaper.UpdateArrange()
     reaper.TrackList_AdjustWindows(false)
   end
-  
+
   return success
 end
 
@@ -411,12 +412,13 @@ end
 local function draw_search_box()
   reaper.ImGui_Text(ctx, "Search Track Templates:")
   reaper.ImGui_SameLine(ctx)
-  
-  -- Auto-focus the search field when window first opens
+
+  -- Auto-focus when window appears
   if reaper.ImGui_IsWindowAppearing(ctx) then
     reaper.ImGui_SetKeyboardFocusHere(ctx)
   end
-  
+
+  -- Regular input: report changes on each keystroke
   local changed, new_text = reaper.ImGui_InputText(ctx, "##search", search_text)
   if changed then
     search_text = new_text
@@ -425,8 +427,63 @@ local function draw_search_box()
     else
       filtered_templates = filter_templates(template_tree, search_text)
     end
+
+    -- Ensure the first result is selected by default when the search changes
+    local results = flatten_templates(filtered_templates)
+    if #results > 0 then
+      local found = false
+      if selected_template then
+        for i, t in ipairs(results) do
+          if t.path == selected_template.path then
+            found = true
+            break
+          end
+        end
+      end
+      if not found then
+        selected_template = results[1]
+      end
+    end
   end
-  
+
+  -- Handle keyboard navigation and enter-to-insert when search box is focused
+  if reaper.ImGui_IsItemFocused(ctx) then
+    local results = flatten_templates(filtered_templates)
+
+    -- Act on keyboard if there are results (even if the search is empty)
+    if #results > 0 then
+      -- Determine current selected index within results
+      local current_index = 1
+      if selected_template then
+        for i, t in ipairs(results) do
+          if t.path == selected_template.path then
+            current_index = i
+            break
+          end
+        end
+      end
+
+      -- Up/Down arrows to change highlighted (selected) template
+      if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_DownArrow()) then
+        current_index = math.min(current_index + 1, #results)
+        selected_template = results[current_index]
+      elseif reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_UpArrow()) then
+        current_index = math.max(current_index - 1, 1)
+        selected_template = results[current_index]
+      end
+
+      -- Enter inserts the selected template (defaulting to the first result)
+      if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) then
+        local to_insert = selected_template or results[1]
+        if insert_template(to_insert) then
+          if settings.auto_close_on_insert then
+            window_open = false
+          end
+        end
+      end
+    end
+  end
+
   -- Show count
   reaper.ImGui_SameLine(ctx)
   local flat_templates = flatten_templates(template_tree)
@@ -437,33 +494,33 @@ end
 local function draw_tree_node(item, depth)
   depth = depth or 0
   local indent = depth * 20
-  
+
   if item.type == "folder" then
     -- Draw folder node
     reaper.ImGui_SetCursorPosX(ctx, reaper.ImGui_GetCursorPosX(ctx) + indent)
-    
+
     local node_flags = reaper.ImGui_TreeNodeFlags_OpenOnArrow() | reaper.ImGui_TreeNodeFlags_OpenOnDoubleClick()
     if item.expanded then
       node_flags = node_flags | reaper.ImGui_TreeNodeFlags_DefaultOpen()
     end
-    
+
     -- Use TreeNode instead of TreeNodeEx to see if it displays correctly
     local unique_id = "folder_" .. tostring(math.random(1000000))
     reaper.ImGui_PushID(ctx, unique_id)
-    
+
     local tree_open = false
     if item.expanded then
       reaper.ImGui_SetNextItemOpen(ctx, true)
     end
-    
+
     tree_open = reaper.ImGui_TreeNode(ctx, item.name)
-    
+
     -- Update expanded state
     if tree_open ~= item.expanded then
       item.expanded = tree_open
       expanded_folders[item.relative_path] = tree_open
     end
-    
+
     if tree_open then
       -- Draw children
       if item.children then
@@ -473,29 +530,29 @@ local function draw_tree_node(item, depth)
       end
       reaper.ImGui_TreePop(ctx)
     end
-    
+
     reaper.ImGui_PopID(ctx)
-    
+
   elseif item.type == "template" then
     -- Draw template item
     reaper.ImGui_SetCursorPosX(ctx, reaper.ImGui_GetCursorPosX(ctx) + indent)
-    
+
     -- Use path for comparison since template objects might be different instances
     local is_selected = (selected_template and selected_template.path == item.path)
     local selectable_flags = reaper.ImGui_SelectableFlags_AllowDoubleClick()
-    
+
     -- Calculate available width for template name to avoid overlap with tag
     local available_width = reaper.ImGui_GetContentRegionAvail(ctx)
     local tag_width = 60 -- Width needed for [Track] tag
     local name_width = available_width - tag_width - 10 -- Leave some padding
-    
+
     -- Create a unique ID for the selectable
     local unique_id = "template_" .. item.relative_path
-    
+
     if reaper.ImGui_Selectable(ctx, item.name .. "##" .. unique_id, is_selected, selectable_flags, name_width, 0) then
       selected_template = item
     end
-    
+
     -- Double-click to insert
     if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
       if insert_template(item) then
@@ -504,7 +561,7 @@ local function draw_tree_node(item, depth)
         end
       end
     end
-    
+
     -- Show tooltip with details
     if reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_BeginTooltip(ctx)
@@ -515,13 +572,13 @@ local function draw_tree_node(item, depth)
       end
       reaper.ImGui_EndTooltip(ctx)
     end
-    
+
     -- Show template type indicator on the same line, aligned to the right
     reaper.ImGui_SameLine(ctx)
     local cursor_x = reaper.ImGui_GetCursorPosX(ctx)
     local content_width = reaper.ImGui_GetContentRegionAvail(ctx)
     reaper.ImGui_SetCursorPosX(ctx, cursor_x + content_width - tag_width)
-    
+
     local color = item.template_type == "Track" and 0xFF4444FF or 0xFF44FF44
     reaper.ImGui_TextColored(ctx, color, "[" .. item.template_type .. "]")
   end
@@ -529,7 +586,6 @@ end
 
 local function draw_template_tree()
   if reaper.ImGui_BeginChild(ctx, "TemplateTree", 0, -100) then
-    
     if #filtered_templates == 0 then
       if #template_tree == 0 then
         reaper.ImGui_Text(ctx, "No templates found.")
@@ -545,7 +601,7 @@ local function draw_template_tree()
         draw_tree_node(item, 0)
       end
     end
-    
+
     reaper.ImGui_EndChild(ctx)
   end
 end
@@ -558,7 +614,7 @@ local function draw_settings_section()
       settings.auto_close_on_insert = new_auto_close
       save_settings()
     end
-    
+
     -- Show file paths setting
     local show_paths_changed, new_show_paths = reaper.ImGui_Checkbox(ctx, "Show file paths in tooltips", settings.show_file_paths)
     if show_paths_changed then
@@ -570,25 +626,25 @@ end
 
 local function draw_status_bar()
   reaper.ImGui_Separator(ctx)
-  
+
   -- Buttons
   local available_width = reaper.ImGui_GetContentRegionAvail(ctx)
   reaper.ImGui_SetCursorPosX(ctx, reaper.ImGui_GetCursorPosX(ctx) + available_width - 200)
-  
+
   -- Refresh button
   if reaper.ImGui_Button(ctx, "Refresh", 60, 25) then
     template_tree = scan_templates()
     filtered_templates = template_tree
   end
-  
+
   reaper.ImGui_SameLine(ctx)
-  
+
   -- Insert button
   local insert_enabled = (selected_template ~= nil)
   if not insert_enabled then
     reaper.ImGui_BeginDisabled(ctx)
   end
-  
+
   if reaper.ImGui_Button(ctx, "Insert", 60, 25) then
     if insert_template(selected_template) then
       if settings.auto_close_on_insert then
@@ -596,13 +652,13 @@ local function draw_status_bar()
       end
     end
   end
-  
+
   if not insert_enabled then
     reaper.ImGui_EndDisabled(ctx)
   end
-  
+
   reaper.ImGui_SameLine(ctx)
-  
+
   -- Close button
   if reaper.ImGui_Button(ctx, "Close", 50, 25) then
     window_open = false
@@ -613,30 +669,30 @@ end
 local initial_position_set = false
 
 local function draw_main_window()
-  local window_flags = reaper.ImGui_WindowFlags_NoSavedSettings()
-  
+  local window_flags = reaper.ImGui_WindowFlags_NoSavedSettings() | reaper.ImGui_WindowFlags_NoNavInputs() | reaper.ImGui_WindowFlags_NoNavFocus()
+
   -- Set window position and size from saved settings only once
   if not initial_position_set and settings.window_x >= 0 and settings.window_y >= 0 then
     reaper.ImGui_SetNextWindowPos(ctx, settings.window_x, settings.window_y)
     reaper.ImGui_SetNextWindowSize(ctx, settings.window_width, settings.window_height)
     initial_position_set = true
   end
-  
+
   local visible, open = reaper.ImGui_Begin(ctx, "Track Template Insert", true, window_flags)
-  
+
   if visible then
     draw_search_box()
     reaper.ImGui_Spacing(ctx)
     draw_template_tree()
     draw_settings_section()
     draw_status_bar()
-    
+
     -- Save window state every frame (but only if it actually changed)
     save_window_state()
-    
+
     reaper.ImGui_End(ctx)
   end
-  
+
   return open
 end
 
@@ -647,28 +703,28 @@ end
 local function init()
   -- Load settings first
   load_settings()
-  
+
   -- Scan for templates
   template_tree = scan_templates()
   filtered_templates = template_tree
-  
+
   -- Focus search box
   reaper.ImGui_SetNextWindowFocus(ctx)
 end
 
 local function main_loop()
-  if not window_open then 
-    return 
+  if not window_open then
+    return
   end
-  
+
   reaper.ImGui_PushFont(ctx, font, 14)
   local gui_open = draw_main_window()
   reaper.ImGui_PopFont(ctx)
-  
+
   if not gui_open then
     window_open = false
   end
-  
+
   if window_open then
     reaper.defer(main_loop)
   end
@@ -688,7 +744,7 @@ reaper.PreventUIRefresh(-1)
 reaper.atexit(function()
   -- Save settings one final time
   save_settings()
-  
+
   if ctx and reaper.ImGui_DestroyContext then
     reaper.ImGui_DestroyContext(ctx)
   end
