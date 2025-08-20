@@ -1,9 +1,9 @@
 --[[
 @description 7R Keyswitch Manager
 @author 7thResonance
-@version 1.o
+@version 1.1
 @changelog
-     - Initial
+     - Fix note selection KS insert behaviour
 @donation https://paypal.me/7thresonance
 @about Original Script by Ugurcan Orcun; ReaKS - Keyswitch Articulation Manager
    I have added a few extra features.
@@ -282,17 +282,49 @@ function InsertKS(noteNumber, isShiftHeld)
     -- Operations on other KS notes
     local _, noteCount = reaper.MIDI_CountEvts(ActiveTake)
     if not isShiftHeld then
-        for noteID = noteCount, 0, -1 do
-            local _, _, _, startPosPPQ, endPosPPQ, _, pitch, _ = reaper.MIDI_GetNote(ActiveTake, noteID)
-            newKSStartPPQ = insertionRangeStart + Setting_PPQOffset
-            newKSEndPPQ = insertionRangeEnd + Setting_PPQOffset
+        if selectionMode then
+            -- Split/trim existing KS notes around the selected range (aligned with offset), and remove only the overlapped part
+            for noteID = noteCount - 1, 0, -1 do
+                local _, selected, muted, startPosPPQ, endPosPPQ, chan, pitch, vel = reaper.MIDI_GetNote(ActiveTake, noteID)
+                -- Use offset-adjusted bounds so trims match the inserted KS boundaries
+                local selStart = newKSStartPPQ
+                local selEnd   = newKSEndPPQ
 
-            -- Process overlapping notes
-            if Articulations[pitch] then
-                if startPosPPQ < newKSStartPPQ and endPosPPQ > newKSStartPPQ then reaper.MIDI_SetNote(ActiveTake, noteID, nil, nil, nil, newKSStartPPQ) end
-                if startPosPPQ < newKSStartPPQ and endPosPPQ > newKSStartPPQ and endPosPPQ < newKSEndPPQ then reaper.MIDI_SetNote(ActiveTake, noteID, nil, nil, nil, newKSStartPPQ) end
-                if startPosPPQ >= newKSStartPPQ and startPosPPQ < newKSEndPPQ and endPosPPQ > newKSEndPPQ then reaper.MIDI_SetNote(ActiveTake, noteID, nil, nil, newKSEndPPQ, nil) end
-                if startPosPPQ >= newKSStartPPQ and endPosPPQ <= newKSEndPPQ then reaper.MIDI_DeleteNote(ActiveTake, noteID) end
+                if Articulations[pitch] then
+                    local overlaps = not (endPosPPQ <= selStart or startPosPPQ >= selEnd)
+                    if overlaps then
+                        -- Fully inside selection -> delete
+                        if startPosPPQ >= selStart and endPosPPQ <= selEnd then
+                            reaper.MIDI_DeleteNote(ActiveTake, noteID)
+                        -- Fully covers selection -> split into two parts
+                        elseif startPosPPQ < selStart and endPosPPQ > selEnd then
+                            -- Left piece: trim end to selStart
+                            reaper.MIDI_SetNote(ActiveTake, noteID, nil, nil, nil, selStart, nil, nil, nil)
+                            -- Right piece: insert from selEnd to original end
+                            reaper.MIDI_InsertNote(ActiveTake, false, muted, selEnd, endPosPPQ, chan, pitch, vel, false)
+                        -- Overlaps on the left only -> trim end to selStart
+                        elseif startPosPPQ < selStart and endPosPPQ > selStart and endPosPPQ <= selEnd then
+                            reaper.MIDI_SetNote(ActiveTake, noteID, nil, nil, nil, selStart, nil, nil, nil)
+                        -- Overlaps on the right only -> trim start to selEnd
+                        elseif startPosPPQ >= selStart and startPosPPQ < selEnd and endPosPPQ > selEnd then
+                            reaper.MIDI_SetNote(ActiveTake, noteID, nil, nil, selEnd, nil, nil, nil, nil)
+                        end
+                    end
+                end
+            end
+        else
+            -- No selection: keep original trimming behavior
+            for noteID = noteCount, 0, -1 do
+                local _, _, _, startPosPPQ, endPosPPQ, _, pitch, _ = reaper.MIDI_GetNote(ActiveTake, noteID)
+                local selStart = newKSStartPPQ
+                local selEnd   = newKSEndPPQ
+
+                if Articulations[pitch] then
+                    if startPosPPQ < selStart and endPosPPQ > selStart then reaper.MIDI_SetNote(ActiveTake, noteID, nil, nil, nil, selStart) end
+                    if startPosPPQ < selStart and endPosPPQ > selStart and endPosPPQ < selEnd then reaper.MIDI_SetNote(ActiveTake, noteID, nil, nil, nil, selStart) end
+                    if startPosPPQ >= selStart and startPosPPQ < selEnd and endPosPPQ > selEnd then reaper.MIDI_SetNote(ActiveTake, noteID, nil, nil, selEnd, nil) end
+                    if startPosPPQ >= selStart and endPosPPQ <= selEnd then reaper.MIDI_DeleteNote(ActiveTake, noteID) end
+                end
             end
         end
     end
