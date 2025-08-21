@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="c4ed906ebc315e980e65bb92f42fd4e972413014">
+<index version="1" name="7thResonance's Reaper Scripts" commit="f596f3bb7f96e952afb81c2c32ecbfbc2e3b0468">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -218,6 +218,10 @@
       <version name="1.o" author="7thResonance" time="2025-08-19T23:21:49Z">
         <changelog><![CDATA[- Initial]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/c4ed906ebc315e980e65bb92f42fd4e972413014/Utilities/7R%20Keyswitch%20Manager.lua</source>
+      </version>
+      <version name="1.1" author="7thResonance" time="2025-08-20T07:14:22Z">
+        <changelog><![CDATA[- Fix note selection KS insert behaviour]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/f596f3bb7f96e952afb81c2c32ecbfbc2e3b0468/Utilities/7R%20Keyswitch%20Manager.lua</source>
       </version>
     </reapack>
     <reapack name="7R Marker n Region Exporter (GUI)(Project, Take, Item relative, Source Relative).lua" type="script" desc="7R Marker n Region Exporter (Project/Take/Regions)">
