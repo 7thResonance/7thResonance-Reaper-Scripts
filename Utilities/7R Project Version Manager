@@ -1,8 +1,8 @@
 --[[
 @description 7R Project Version Manager
 @author 7thResonance
-@version 0.5
-@changelog - initial
+@version 0.6
+@changelog - Initialise again
 @donation https://paypal.me/7thresonance
 @screenshot Window https://i.postimg.cc/qRNQ9926/Screenshot-2025-08-23-001441.png
 @about A GUI to save versions of the project to a table and recall them.
