@@ -1,8 +1,8 @@
 --[[
 @description 7R Project Version Manager
 @author 7thResonance
-@version 1.0
-@changelog - Initialise again,maybe need 1.0 as the minimum version?
+@version 0.5
+@changelog - Initialise
 @donation https://paypal.me/7thresonance
 @screenshot Window https://i.postimg.cc/qRNQ9926/Screenshot-2025-08-23-001441.png
 @about A GUI to save versions of the project to a table and recall them.
@@ -24,7 +24,7 @@
         - Post save detection and autocopy (during opening of GUI)
         - Position and size is remembered
 
-    Do not use this script for important projects, still needs a lot of testing. thats why the version is 1.0 beta
+    Do not use this script for important projects, still needs a lot of testing. thats why the version is 0.5
 --]]
 
 -- Safety: require ReaImGui (v0.9+) for GUI
