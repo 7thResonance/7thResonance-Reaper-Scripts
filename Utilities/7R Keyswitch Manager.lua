@@ -1,9 +1,9 @@
 --[[
 @description 7R Keyswitch Manager
 @author 7thResonance
-@version 1.1
+@version 1.2
 @changelog
-     - Fix note selection KS insert behaviour
+     - Improve Search and folder expansion behaviour
 @donation https://paypal.me/7thresonance
 @about Original Script by Ugurcan Orcun; ReaKS - Keyswitch Articulation Manager
    I have added a few extra features.
@@ -43,7 +43,7 @@ EnumThemeColors = { -- fetch colors from Reaper theme
     A = ThemeColorToImguiColor("col_tracklistbg"), -- Background
     B = ThemeColorToImguiColor("col_tracklistbg") + 0x111111FF, -- Default Interactive
     C = ThemeColorToImguiColor("col_tracklistbg") + 0x444444FF, -- Clicked
-    D = ThemeColorToImguiColor("col_tracklistbg") + 0x222222FF, -- Hovered
+    D = ThemeColorToImguiColor("col_tracklistbg") + 0x222222FF, -- Hovered    
     E = ThemeColorToImguiColor("col_tcp_text"), -- HeaderText
     F = 0xFFFFFFFF, -- Text
     G = ThemeColorToImguiColor("midi_editcurs") -- Active Articulation
@@ -174,12 +174,12 @@ end
 function LoadNoteNames()
     Articulations = {}
     CC = {}
-    reaper.MIDIEditor_LastFocused_OnCommand(40409, false)
+    reaper.MIDIEditor_LastFocused_OnCommand(40409, false)    
     RefreshGUI()
 end
 
 function SaveNoteNames()
-    reaper.MIDIEditor_LastFocused_OnCommand(40410, false)
+    reaper.MIDIEditor_LastFocused_OnCommand(40410, false)    
 end
 
 function ClearNoteNames()
@@ -258,7 +258,7 @@ function InsertKS(noteNumber, isShiftHeld)
         selectedNoteIDX = reaper.MIDI_EnumSelNotes(ActiveTake, selectedNoteIDX)
 
         while selectedNoteIDX ~= -1 do
-            local _, _, _, selectedNoteStartPPQ, selectedNoteEndPPQ = reaper.MIDI_GetNote(ActiveTake, selectedNoteIDX)
+            local _, _, _, selectedNoteStartPPQ, selectedNoteEndPPQ = reaper.MIDI_GetNote(ActiveTake, selectedNoteIDX)         
 
             insertionRangeStart = math.min(insertionRangeStart, selectedNoteStartPPQ)
             insertionRangeEnd = math.max(insertionRangeEnd, selectedNoteEndPPQ)
@@ -268,10 +268,10 @@ function InsertKS(noteNumber, isShiftHeld)
     else
         insertionRangeStart = reaper.GetCursorPosition()
         insertionRangeStart = reaper.MIDI_GetPPQPosFromProjTime(ActiveTake, insertionRangeStart)
-
+        
         if Setting_ChaseMode then
             insertionRangeEnd = MIDIItemEndPPQ
-        else
+        else 
             insertionRangeEnd = insertionRangeStart + singleGridLength
         end
     end
@@ -280,7 +280,7 @@ function InsertKS(noteNumber, isShiftHeld)
     newKSEndPPQ = insertionRangeEnd + Setting_PPQOffset
 
     -- Operations on other KS notes
-    local _, noteCount = reaper.MIDI_CountEvts(ActiveTake)
+    local _, noteCount = reaper.MIDI_CountEvts(ActiveTake)        
     if not isShiftHeld then
         if selectionMode then
             -- Split/trim existing KS notes around the selected range (aligned with offset), and remove only the overlapped part
@@ -335,21 +335,21 @@ function InsertKS(noteNumber, isShiftHeld)
     -- Insert the new KS note
 
     reaper.MIDI_InsertNote(ActiveTake, false, false, newKSStartPPQ, newKSEndPPQ, 0, noteNumber, 100, false)
-
+    
     -- Move edit cursor to the end of the new note if no notes are selected
-    if reaper.MIDI_EnumSelNotes(ActiveTake, -1) == -1 and not isShiftHeld then
+    if reaper.MIDI_EnumSelNotes(ActiveTake, -1) == -1 and not isShiftHeld then 
         local mouseMovePos = 0
         if Setting_ChaseMode then mouseMovePos = insertionRangeStart + singleGridLength else mouseMovePos = insertionRangeEnd end
 
-        reaper.SetEditCurPos(reaper.MIDI_GetProjTimeFromPPQPos(ActiveTake, mouseMovePos), true, false)
-    end
+        reaper.SetEditCurPos(reaper.MIDI_GetProjTimeFromPPQPos(ActiveTake, mouseMovePos), true, false) 
+    end    
 
     -- Update text events if the setting is enabled
     if Setting_AutoupdateTextEvent then UpdateTextEvents() end
 
     reaper.Undo_EndBlock("Insert KS Note", -1)
 
-    reaper.MIDI_Sort(ActiveTake)
+    reaper.MIDI_Sort(ActiveTake)    
 end
 
 function SendMIDINote(noteNumber)
@@ -365,7 +365,7 @@ function RemoveKS(noteNumber)
 
     if ActivatedKS[noteNumber] ~= nil then
         reaper.MIDI_DeleteNote(ActiveTake, ActivatedKS[noteNumber])
-    end
+    end    
 end
 
 function LengthenSelectedNotes(toLeft)
@@ -407,12 +407,12 @@ function GetActiveKSAtPlayheadPosition()
 
     playheadPosition = reaper.GetPlayState() == 1 and reaper.GetPlayPosition() or reaper.GetCursorPosition()
     playheadPosition = reaper.MIDI_GetPPQPosFromProjTime(ActiveTake, playheadPosition)
-
+    
     local _, noteCount = reaper.MIDI_CountEvts(ActiveTake)
-
+    
     for noteID = 1, noteCount do
         local _, _, _, startppqpos, endppqpos, _, pitch, _ = reaper.MIDI_GetNote(ActiveTake, noteID - 1)
-        if startppqpos <= playheadPosition and endppqpos >= playheadPosition then
+        if startppqpos <= playheadPosition and endppqpos >= playheadPosition then                
             if Articulations[pitch] ~= nil then
                     ActivatedKS[pitch] = noteID - 1
             end
@@ -554,6 +554,11 @@ NoteBrowser_InputFocusNext = NoteBrowser_InputFocusNext or false
 NoteBrowser_WasOpen = NoteBrowser_WasOpen or false
 NoteBrowser_LastRoot = NoteBrowser_LastRoot or nil
 NoteBrowser_CurrentDir = NoteBrowser_CurrentDir or nil
+-- Tree-based browser state (mirrors Track Template Inserter logic)
+NoteTree = NoteTree or {}
+FilteredNoteTree = FilteredNoteTree or {}
+ExpandedFolders = ExpandedFolders or {}
+SelectedNoteFile = SelectedNoteFile or nil
 
 -- Build a flat list of all .txt files under the root
 function BuildNoteNameFileList(root)
@@ -650,64 +655,150 @@ end
 -- Render the folder tree (without showing the root label), listing .txt files under each folder.
 -- When searching, only branches with matches are shown and are default-open.
 function RenderNoteNameTreeFiltered(root, showRoot, q)
-    NoteBrowser_VisibleFiles = {}
+    -- Deprecated by tree-based logic; kept as a stub if referenced elsewhere.
+end
 
-    local function renderDir(dir, displayName)
-        if q ~= "" and not HasMatch(dir, q) then
-            return
+-- Tree building (Track Template Inserter style)
+local function BuildNoteTreeRecursive(root_path, relative_path)
+    local items, folders, files = {}, {}, {}
+
+    -- Folders first
+    local di = 0
+    while true do
+        local sub = reaper.EnumerateSubdirectories(root_path, di)
+        if not sub then break end
+        local sub_path = PathJoin(root_path, sub)
+        local sub_rel = relative_path == '' and sub or (relative_path .. '/' .. sub)
+        local child_items = BuildNoteTreeRecursive(sub_path, sub_rel)
+        table.insert(folders, {
+            name = sub,
+            type = 'folder',
+            path = sub_path,
+            relative_path = sub_rel,
+            children = child_items,
+            expanded = ExpandedFolders[sub_rel] or false
+        })
+        di = di + 1
+    end
+
+    -- Files
+    local fi = 0
+    while true do
+        local file = reaper.EnumerateFiles(root_path, fi)
+        if not file then break end
+        if file:lower():match('%.txt$') then
+            local file_path = PathJoin(root_path, file)
+            local file_rel = relative_path == '' and file or (relative_path .. '/' .. file)
+            local name = file:gsub('%.txt$', '')
+            table.insert(files, {
+                name = name,
+                filename = file,
+                type = 'file',
+                path = file_path,
+                relative_path = file_rel
+            })
         end
+        fi = fi + 1
+    end
 
-        if displayName then
-            local label = displayName .. '##' .. dir
-            if q ~= "" then
-                ImGui.SetNextItemOpen(ctx, true)
+    table.sort(folders, function(a,b) return a.name:lower() < b.name:lower() end)
+    table.sort(files, function(a,b) return a.name:lower() < b.name:lower() end)
+    for _, f in ipairs(folders) do table.insert(items, f) end
+    for _, f in ipairs(files) do table.insert(items, f) end
+    return items
+end
+
+function BuildNoteTree(root)
+    -- Return a list of items under root (folders first, then files)
+    return BuildNoteTreeRecursive(root, '')
+end
+
+function FlattenNoteFiles(tree_items, out)
+    out = out or {}
+    for _, it in ipairs(tree_items or {}) do
+        if it.type == 'file' then
+            table.insert(out, it)
+        elseif it.type == 'folder' then
+            FlattenNoteFiles(it.children, out)
+        end
+    end
+    return out
+end
+
+function FilterNoteTree(tree_items, search_term)
+    if not search_term or search_term == '' then return tree_items end
+    local q = search_term:lower()
+    local filtered = {}
+    for _, it in ipairs(tree_items or {}) do
+        if it.type == 'file' then
+            if it.name:lower():find(q, 1, true) or it.filename:lower():find(q, 1, true) then
+                table.insert(filtered, it)
             end
-            local opened = ImGui.TreeNode(ctx, label)
-            if opened then
-                -- Files in this folder
-                local i = 0
-                while true do
-                    local file = reaper.EnumerateFiles(dir, i)
-                    if not file then break end
-                    local fl = file:lower()
-                    if fl:match('%.txt$') and (q == "" or fl:find(q, 1, true)) then
-                        local idx = #NoteBrowser_VisibleFiles + 1
-                        local selected = (NoteBrowser_SelectedIndex == idx)
-                        if ImGui.Selectable(ctx, file, selected) then
-                            NoteBrowser_SelectedIndex = idx
-                        end
-                        if ImGui.IsItemHovered(ctx) and ImGui.IsMouseDoubleClicked(ctx, 0) then
-                            LoadNoteNamesFromFile(PathJoin(dir, file))
-                        end
-                        table.insert(NoteBrowser_VisibleFiles, { name = file, path = PathJoin(dir, file) })
-                    end
-                    i = i + 1
-                end
-
-                -- Subfolders
-                i = 0
-                while true do
-                    local sub = reaper.EnumerateSubdirectories(dir, i)
-                    if not sub then break end
-                    renderDir(PathJoin(dir, sub), sub)
-                    i = i + 1
-                end
-
-                ImGui.TreePop(ctx)
-            end
-        else
-            -- Root: render immediate subfolders only (no label for root)
-            local i = 0
-            while true do
-                local sub = reaper.EnumerateSubdirectories(dir, i)
-                if not sub then break end
-                renderDir(PathJoin(dir, sub), sub)
-                i = i + 1
+        elseif it.type == 'folder' then
+            local kids = FilterNoteTree(it.children, search_term)
+            if #kids > 0 then
+                table.insert(filtered, {
+                    name = it.name,
+                    type = 'folder',
+                    path = it.path,
+                    relative_path = it.relative_path,
+                    children = kids,
+                    expanded = true
+                })
             end
         end
     end
+    return filtered
+end
 
-    renderDir(root, showRoot and (root:match("([^/\\]+)$") or root) or nil)
+local function DrawNoteTreeNode(item)
+    if item.type == 'folder' then
+        -- Use random ID like the Track Template Inserter so ImGui doesn't keep open state; rely on our expanded flag
+        local unique_id = 'folder_' .. tostring(math.random(1000000))
+        ImGui.PushID(ctx, unique_id)
+
+        if item.expanded then ImGui.SetNextItemOpen(ctx, true) end
+    local opened = ImGui.TreeNode(ctx, item.name)
+    -- Persist expanded state always (same as Track Template Inserter)
+    if opened ~= item.expanded then
+            item.expanded = opened
+            ExpandedFolders[item.relative_path] = opened
+        end
+        if opened then
+            for _, child in ipairs(item.children or {}) do
+        DrawNoteTreeNode(child)
+            end
+            ImGui.TreePop(ctx)
+        end
+        ImGui.PopID(ctx)
+    else
+        local is_selected = (SelectedNoteFile and SelectedNoteFile.path == item.path)
+    local label = (item.filename or item.name) .. '##' .. item.relative_path
+        if ImGui.Selectable(ctx, label, is_selected) then
+            SelectedNoteFile = item
+        end
+        if ImGui.IsItemHovered(ctx) and ImGui.IsMouseDoubleClicked(ctx, 0) then
+            LoadNoteNamesFromFile(item.path)
+        end
+        if ImGui.IsItemHovered(ctx) then
+            ImGui.SetTooltip(ctx, item.path)
+        end
+    end
+end
+
+local function DrawNoteTree()
+    if #FilteredNoteTree == 0 then
+        if #NoteTree == 0 then
+            ImGui.Text(ctx, 'No note name files found.')
+            ImGui.Text(ctx, GetNoteNamesRoot())
+        else
+            ImGui.Text(ctx, 'No files match your search.')
+        end
+        return
+    end
+    for _, it in ipairs(FilteredNoteTree) do
+    DrawNoteTreeNode(it)
+    end
 end
 
 -- Load note/cc names from a file and apply to the active track
@@ -788,7 +879,7 @@ local function loop()
         ImGui.SameLine(ctx)
         if ImGui.Button(ctx, "Clear") then ClearNoteNames() end
         ImGui.SameLine(ctx)
-        if ImGui.Button(ctx, "Refresh") then
+        if ImGui.Button(ctx, "Refresh") then 
             RefreshGUI()
             if Setting_ExtendOnRefresh then
                 ExtendAllKS()
@@ -804,20 +895,20 @@ local function loop()
         if ImGui.BeginPopupModal(ctx, "Settings", true) then
             local val
 
-            if ImGui.Checkbox(ctx, "Insert Text Events", Setting_AutoupdateTextEvent) then
-                Setting_AutoupdateTextEvent = not Setting_AutoupdateTextEvent
+            if ImGui.Checkbox(ctx, "Insert Text Events", Setting_AutoupdateTextEvent) then 
+                Setting_AutoupdateTextEvent = not Setting_AutoupdateTextEvent 
                 SaveSettings()
             end
             if ImGui.IsItemHovered(ctx) then ImGui.SetTooltip(ctx, "Automatically inserts text events for articulations that's visible on Arrange view. Use [Refresh] button after manual edits to update visuals.") end
 
-            if ImGui.Checkbox(ctx, "Send MIDI Note", Setting_SendNoteWhenClicked) then
-                Setting_SendNoteWhenClicked = not Setting_SendNoteWhenClicked
+            if ImGui.Checkbox(ctx, "Send MIDI Note", Setting_SendNoteWhenClicked) then 
+                Setting_SendNoteWhenClicked = not Setting_SendNoteWhenClicked 
                 SaveSettings()
             end
             if ImGui.IsItemHovered(ctx) then ImGui.SetTooltip(ctx, "Send a MIDI message when the KS button clicked. Good for previewing keyswitches.") end
 
-            if ImGui.Checkbox(ctx, "Chase Mode", Setting_ChaseMode) then
-                Setting_ChaseMode = not Setting_ChaseMode
+            if ImGui.Checkbox(ctx, "Chase Mode", Setting_ChaseMode) then 
+                Setting_ChaseMode = not Setting_ChaseMode 
                 SaveSettings()
             end
             if ImGui.IsItemHovered(ctx) then ImGui.SetTooltip(ctx, "When enabled, the KS note will be inserted until the end of the MIDI item.") end
@@ -835,7 +926,7 @@ local function loop()
             end
             if ImGui.IsItemHovered(ctx) then ImGui.SetTooltip(ctx, "How many KS buttons in a single column.") end
 
-            _, val = ImGui.SliderInt(ctx, "New Note Offset", Setting_PPQOffset, -math.abs(PPQ/4), 0)
+            _, val = ImGui.SliderInt(ctx, "New Note Offset", Setting_PPQOffset, -math.abs(PPQ/4), 0)  
             if val ~= Setting_PPQOffset then
                 Setting_PPQOffset = val
                 SaveSettings()
@@ -868,6 +959,15 @@ local function loop()
 
             local root = GetNoteNamesRoot()
 
+            -- Initial scan or root changed
+            if (not NoteBrowser_WasOpen) or (NoteBrowser_LastRoot ~= root) or (#NoteTree == 0) then
+                NoteTree = BuildNoteTree(root)
+                FilteredNoteTree = NoteTree
+                local flat = FlattenNoteFiles(FilteredNoteTree)
+                SelectedNoteFile = flat[1]
+                NoteBrowser_LastRoot = root
+            end
+
             -- Focus search on first open
             if not NoteBrowser_WasOpen then
                 NoteBrowser_InputFocusNext = true
@@ -880,47 +980,65 @@ local function loop()
 
             -- Search bar
             ImGui.SetNextItemWidth(ctx, -1)
-            _, NoteBrowser_Search = ImGui.InputText(ctx, "Search", NoteBrowser_Search)
+            local changed
+            changed, NoteBrowser_Search = ImGui.InputText(ctx, "Search", NoteBrowser_Search)
 
-            -- Trap other nav keys and keep focus on search
-            if ImGui.IsKeyPressed(ctx, ImGui.Key_Tab, true)
-                or ImGui.IsKeyPressed(ctx, ImGui.Key_LeftArrow, true)
-                or ImGui.IsKeyPressed(ctx, ImGui.Key_RightArrow, true)
-                or ImGui.IsKeyPressed(ctx, ImGui.Key_PageUp, true)
-                or ImGui.IsKeyPressed(ctx, ImGui.Key_PageDown, true)
-                or ImGui.IsKeyPressed(ctx, ImGui.Key_Home, true)
-                or ImGui.IsKeyPressed(ctx, ImGui.Key_End, true) then
-                NoteBrowser_InputFocusNext = true
+            -- Update filtered tree and selection on change
+            if changed then
+                if NoteBrowser_Search == '' then
+                    FilteredNoteTree = NoteTree
+                else
+                    FilteredNoteTree = FilterNoteTree(NoteTree, NoteBrowser_Search)
+                end
+                local results = FlattenNoteFiles(FilteredNoteTree)
+                if #results > 0 then
+                    local keep = false
+                    if SelectedNoteFile then
+                        for _, it in ipairs(results) do
+                            if it.path == SelectedNoteFile.path then keep = true break end
+                        end
+                    end
+                    if not keep then SelectedNoteFile = results[1] end
+                else
+                    SelectedNoteFile = nil
+                end
             end
 
-            -- Render single-pane tree. Root label hidden; show subfolders as top-level nodes.
-            local q = (NoteBrowser_Search or ""):lower()
-            RenderNoteNameTreeFiltered(root, false, q)
-
-            -- Selection bounds based on visible files in the tree
-            local total = #NoteBrowser_VisibleFiles
-            if total == 0 then
-                NoteBrowser_SelectedIndex = 1
-            else
-                if NoteBrowser_SelectedIndex < 1 then NoteBrowser_SelectedIndex = 1 end
-                if NoteBrowser_SelectedIndex > total then NoteBrowser_SelectedIndex = total end
-            end
-
-            -- Keyboard: arrows + enter act on visible files
-            if total > 0 then
-                if ImGui.IsKeyPressed(ctx, ImGui.Key_DownArrow, true) then
-                    NoteBrowser_SelectedIndex = math.min(total, NoteBrowser_SelectedIndex + 1)
-                end
-                if ImGui.IsKeyPressed(ctx, ImGui.Key_UpArrow, true) then
-                    NoteBrowser_SelectedIndex = math.max(1, NoteBrowser_SelectedIndex - 1)
-                end
-                if ImGui.IsKeyPressed(ctx, ImGui.Key_Enter) or ImGui.IsKeyPressed(ctx, ImGui.Key_KeypadEnter) then
-                    local sel = NoteBrowser_VisibleFiles[NoteBrowser_SelectedIndex]
-                    if sel and sel.path then
-                        LoadNoteNamesFromFile(sel.path)
+            -- Keyboard navigation when search is focused
+            if ImGui.IsItemFocused(ctx) then
+                local results = FlattenNoteFiles(FilteredNoteTree)
+                if #results > 0 then
+                    local idx = 1
+                    if SelectedNoteFile then
+                        for i, it in ipairs(results) do
+                            if it.path == SelectedNoteFile.path then idx = i break end
+                        end
+                    end
+                    if ImGui.IsKeyPressed(ctx, ImGui.Key_DownArrow, true) then
+                        idx = math.min(idx + 1, #results)
+                        SelectedNoteFile = results[idx]
+                    elseif ImGui.IsKeyPressed(ctx, ImGui.Key_UpArrow, true) then
+                        idx = math.max(idx - 1, 1)
+                        SelectedNoteFile = results[idx]
+                    end
+                    if ImGui.IsKeyPressed(ctx, ImGui.Key_Enter) or ImGui.IsKeyPressed(ctx, ImGui.Key_KeypadEnter) then
+                        local toLoad = SelectedNoteFile or results[1]
+                        if toLoad and toLoad.path then
+                            LoadNoteNamesFromFile(toLoad.path)
+                        end
                     end
                 end
             end
+
+            -- Show tree
+            local isFiltering = (NoteBrowser_Search or '') ~= ''
+            DrawNoteTree(isFiltering)
+
+            -- Show counts
+            local allCount = #FlattenNoteFiles(NoteTree)
+            local filtCount = #FlattenNoteFiles(FilteredNoteTree)
+            ImGui.Separator(ctx)
+            ImGui.Text(ctx, string.format("%d/%d files", filtCount, allCount))
 
             ImGui.EndChild(ctx)
         else
@@ -946,14 +1064,14 @@ local function loop()
                         local isShiftHeld = ImGui.GetKeyMods(ctx) == ImGui.Mod_Shift
                         local isCtrlHeld = ImGui.GetKeyMods(ctx) == ImGui.Mod_Ctrl
                         local isAltHeld = ImGui.GetKeyMods(ctx) == ImGui.Mod_Alt
-
-                        if isCtrlHeld then
+                        
+                        if isCtrlHeld then 
                             SendMIDINote(i)
                         elseif isAltHeld then
                             RemoveKS(i)
                         else
-                            InsertKS(i, isShiftHeld)
-                            if Setting_SendNoteWhenClicked then SendMIDINote(i) end
+                            InsertKS(i, isShiftHeld)                            
+                            if Setting_SendNoteWhenClicked then SendMIDINote(i) end                                
                         end
                     end
 
@@ -963,7 +1081,7 @@ local function loop()
                     if itemCount % Setting_ItemsPerColumn == 0 then
                         ImGui.EndGroup(ctx)
                         ImGui.SameLine(ctx)
-                        ImGui.BeginGroup(ctx)
+                        ImGui.BeginGroup(ctx) 
                     end
                 end
             end
@@ -974,7 +1092,7 @@ local function loop()
         Window_PosX, Window_PosY = ImGui.GetWindowPos(ctx)
         Window_SizeW, Window_SizeH = ImGui.GetWindowSize(ctx)
 
-        ImGui.End(ctx)
+        ImGui.End(ctx)        
     end
 
     StylingEnd(ctx)
