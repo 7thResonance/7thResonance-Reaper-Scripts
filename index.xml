@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="f596f3bb7f96e952afb81c2c32ecbfbc2e3b0468">
+<index version="1" name="7thResonance's Reaper Scripts" commit="70df493e4570455b8f677c3f08c3b0de8b9f06bb">
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
@@ -223,6 +223,10 @@
         <changelog><![CDATA[- Fix note selection KS insert behaviour]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/f596f3bb7f96e952afb81c2c32ecbfbc2e3b0468/Utilities/7R%20Keyswitch%20Manager.lua</source>
       </version>
+      <version name="1.2" author="7thResonance" time="2025-08-22T18:59:20Z">
+        <changelog><![CDATA[- Improve Search and folder expansion behaviour]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/70df493e4570455b8f677c3f08c3b0de8b9f06bb/Utilities/7R%20Keyswitch%20Manager.lua</source>
+      </version>
     </reapack>
     <reapack name="7R Marker n Region Exporter (GUI)(Project, Take, Item relative, Source Relative).lua" type="script" desc="7R Marker n Region Exporter (Project/Take/Regions)">
       <metadata>
@@ -323,6 +327,29 @@ Doesnt create send if folder.]]></changelog>
       <version name="1.8" author="7thResonance" time="2025-07-12T17:02:52Z">
         <changelog><![CDATA[- added media item changes for detection]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/82beca691b1c9ae8b42f83bc898af6907cb40e52/Utilities/7R%20MIDI%20AutoSend.lua</source>
+      </version>
+    </reapack>
+    <reapack name="7R Project Browser.lua" type="script" desc="7R Project Browser">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 A simple GUI to view and load projects.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Select Root Master folder.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Hide individual folders at any level\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Open, Open in new tab, and explorer window\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Search all folders or only selected folder (settings)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Name, and date modification sort\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Position and size is remembered\sa180\par}
+}
+]]></description>
+        <link rel="screenshot" href="https://i.postimg.cc/W1D3q8m6/Screenshot-2025-08-23-002124.png">Window</link>
+        <link rel="donation">https://paypal.me/7thresonance</link>
+      </metadata>
+      <version name="1.0" author="7thResonance" time="2025-08-22T18:59:20Z">
+        <changelog><![CDATA[- initial]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/70df493e4570455b8f677c3f08c3b0de8b9f06bb/Utilities/7R%20Project%20Browser.lua</source>
       </version>
     </reapack>
     <reapack name="7R Track Template Inserter (GUI).lua" type="script" desc="7R Track Template Inserter (GUI)">
