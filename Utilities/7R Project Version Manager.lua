@@ -1,7 +1,7 @@
 --[[
 @description 7R Project Version Manager
 @author 7thResonance
-@version 0.5
+@version 0.51
 @changelog - Initialise
 @donation https://paypal.me/7thresonance
 @screenshot Window https://i.postimg.cc/qRNQ9926/Screenshot-2025-08-23-001441.png
@@ -24,7 +24,7 @@
         - Post save detection and autocopy (during opening of GUI)
         - Position and size is remembered
 
-    Do not use this script for important projects, still needs a lot of testing. thats why the version is 0.5
+    Do not use this script for important projects, still needs a lot of testing. thats why the version is 0.51
 --]]
 
 -- Safety: require ReaImGui (v0.9+) for GUI
@@ -162,6 +162,23 @@ local function ensure_dir(p)
     os.execute(('mkdir -p "%s"'):format(p))
   end
   return (reaper.EnumerateFiles(p, 0) ~= nil) or (reaper.EnumerateSubdirectories(p, 0) ~= nil)
+end
+
+-- Quick write-access probe for a directory: try creating and deleting a tiny temp file
+local function can_write_dir(dir)
+  if not dir or dir == "" then return false, "empty dir" end
+  -- Ensure directory exists first
+  if not ensure_dir(dir) then return false, "cannot create directory" end
+  local probe_name = ".7rvm_writecheck_" .. tostring(os.time()) .. "_" .. tostring(math.random(100000, 999999)) .. ".tmp"
+  local probe_path = path_join(dir, probe_name)
+  local f, err = io.open(probe_path, "wb")
+  if not f then return false, "open failed: " .. tostring(err) end
+  local ok, werr = pcall(function() f:write("ok") end)
+  f:close()
+  -- Attempt cleanup regardless
+  os.remove(probe_path)
+  if not ok then return false, "write failed: " .. tostring(werr) end
+  return true
 end
 
 -- Normalize paths for comparison (lowercase, forward slashes, collapse repeats)
@@ -313,7 +330,14 @@ local function rvm_chunk_to_table(str)
 end
 
 local function _write_new_container(path, master_path)
-  local f = io.open(path, "wb"); if not f then return false, "cannot create container" end
+  -- Preflight: directory must exist and be writable
+  local dir = path_dirname(path)
+  local okDir, derr = can_write_dir(dir)
+  if not okDir then
+    return false, string.format("no write access to folder: %s (%s)", tostring(dir), tostring(derr))
+  end
+  -- Create new container file
+  local f, ferr = io.open(path, "wb"); if not f then return false, "cannot create container file: " .. tostring(ferr) end
   -- Header
   f:write(RVM_MAGIC)
   f:write(("RSV %d\n"):format(RVM_RESERVED_BYTES))
@@ -330,7 +354,7 @@ local function _write_new_container(path, master_path)
     versions = {}
   }
   local ok, err = (function()
-    local mf = io.open(path, "r+b"); if not mf then return false, "cannot reopen" end
+    local mf, oerr = io.open(path, "r+b"); if not mf then return false, "cannot reopen: " .. tostring(oerr) end
     local _, rsv, header_len = _read_header(path); if not header_len then mf:close(); return false, "bad header" end
     local chunk = rvm_table_to_chunk(manifest)
     local len_line2 = ("LEN %d\n"):format(#chunk)
