@@ -1,5 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="d1140ebde775f09089bf2f5c3ab7fddbe6e7f952">
+<index version="1" name="7thResonance's Reaper Scripts" commit="3fbd9fe7e6f933e2e98434b15bbb813ed74a2e70">
+  <category name="Editing">
+    <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Expands selected media item(s) so their visible take covers the full source length. Each edge (left and right) is expanded independently and will stop at the nearest item edge on the same track (so items won't overlap).\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Behavior summary:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab For each selected item: read take source length, take start offset, playrate.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Compute how much left and right can expand to reach source start/end.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Limit each expansion by nearest neighboring item edge on the same track.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Apply the expansions by lengthening the item.\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Notes:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Works on audio items (media sources) and on items with takes.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab If there is no neighboring item in a direction, that edge may expand up to the source.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Operates on all selected items. Undoable as a single action.\sa180\par}
+}
+]]></description>
+        <link rel="donation">https://paypal.me/7thresonance</link>
+      </metadata>
+      <version name="1.0" author="7thResonance" time="2025-08-24T16:59:15Z">
+        <changelog><![CDATA[- intital]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/3fbd9fe7e6f933e2e98434b15bbb813ed74a2e70/Editing/7R%20Untrim%20Item%20to%20source%20Length%20(until%20other%20item%20edge).lua</source>
+      </version>
+    </reapack>
+  </category>
   <category name="Track">
     <reapack name="7R Adds [Frozen] to Frozen Track's Name.lua" type="script" desc="7R Adds/Removes [Frozen] to Frozen Track's Name based on Undo History">
       <metadata>
