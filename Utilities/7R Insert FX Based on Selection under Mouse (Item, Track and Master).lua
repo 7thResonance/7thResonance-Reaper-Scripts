@@ -1,13 +1,15 @@
 --[[
 @description 7R Insert FX Based on Selection under Mouse cursor (Track or Item, Master)
 @author 7thResonance
-@version 2.6
-@changelog - Better Parsing using Sexan's FX Broswer PArser V7
+@version 2.7
+@changelog - Improved scan update frequency
 @donation https://paypal.me/7thresonance
 @about Opens GUI for track, item or master under cursor with GUI to select FX
     - Saves position and size of GUI
     - Cache for quick search. Updates when new plugins are installed
     - Settings for basic options
+
+    Requires JS ReaScript and Imgui
 @screenshot https://i.postimg.cc/DyqgzknJ/Screenshot-2025-07-11-062605.png
     https://i.postimg.cc/3JM17J5Q/Screenshot-2025-07-11-062614.png
 
@@ -31,6 +33,7 @@ local script_path                      = debug.getinfo(1, "S").source:match [[^@
 local FX_FILE                          = script_path .. "/FX_LIST.txt"
 local FX_CAT_FILE                      = script_path .. "/FX_CAT_FILE.txt"
 local FX_DEV_LIST_FILE                 = script_path .. "/FX_DEV_LIST_FILE.txt"
+local FX_STAT_FILE                     = script_path .. "/FX_VST_STAT.txt"
 
 local CAT                              = {}
 local DEVELOPER_LIST                   = { " (Waves)" }
@@ -158,6 +161,73 @@ function GetFileContext(fp)
         f:close()
     end
     return str
+end
+
+-- File stat helpers (uses js_ReaScriptAPI if available)
+local function FileExists(path)
+    if not path then return false end
+    if not reaper.JS_File_Stat then return false end
+    local a, b, c = reaper.JS_File_Stat(path)
+    if type(a) == 'boolean' then return a end
+    if type(a) == 'number' then return true end
+    if type(a) == 'table' then return true end
+    return false
+end
+
+local function GetVSTPluginsFilePath()
+    local rp = r.GetResourcePath()
+    local candidates = {
+        rp .. "/reaper-vstplugins64",
+        rp .. "/reaper-vstplugins64.ini",
+        rp .. "/reaper-vstplugins",
+        rp .. "/reaper-vstplugins.ini",
+    }
+    for i = 1, #candidates do
+        if FileExists(candidates[i]) then return candidates[i] end
+    end
+    -- fallback to the first candidate even if it doesn't exist
+    return candidates[1]
+end
+
+local function GetFileStat(path)
+    if not path then return nil end
+    if not reaper.JS_File_Stat then return nil end
+    local a, b, c = reaper.JS_File_Stat(path)
+    -- a may be boolean (exists), number (size) or table depending on JS version
+    if type(a) == 'boolean' then
+        if not a then return nil end
+        return { path = path, size = tonumber(b) or 0, mtime = tonumber(c) or 0 }
+    elseif type(a) == 'number' then
+        return { path = path, size = tonumber(a) or 0, mtime = tonumber(b) or 0 }
+    elseif type(a) == 'table' then
+        return { path = path, size = tonumber(a.size) or 0, mtime = tonumber(a.mtime) or 0 }
+    end
+    return nil
+end
+
+local function ReadStatFile()
+    local f = io.open(FX_STAT_FILE, 'r')
+    if not f then return nil end
+    local s = f:read('*all')
+    f:close()
+    local ok, tbl = pcall(function() return StringToTable(s) end)
+    if ok and type(tbl) == 'table' then return tbl end
+    return nil
+end
+
+local function WriteStatFile(stat_tbl)
+    if not stat_tbl then return end
+    local s = TableToString(stat_tbl)
+    WriteToFile(FX_STAT_FILE, s)
+end
+
+local function StatEquals(a, b)
+    if not a or not b then return false end
+    if a.path ~= b.path then return false end
+    -- Compare size and mtime; allow exact match only
+    if tonumber(a.size) ~= tonumber(b.size) then return false end
+    if tonumber(a.mtime) ~= tonumber(b.mtime) then return false end
+    return true
 end
 
 local function GetDirFilesRecursive(dir, tbl, filter)
@@ -1239,10 +1309,32 @@ local function init()
 
     -- Use parser's caching mechanism
     local fx_list_test, cat_test, dev_list_test = ReadFXFile()
+
+    -- Check VST plugins file stat and compare with cached stat to decide whether to rebuild
+    local vst_file = GetVSTPluginsFilePath()
+    local current_stat = GetFileStat(vst_file)
+    local saved_stat = ReadStatFile()
+
+    local need_rebuild = false
     if not fx_list_test or #fx_list_test == 0 or not cat_test or #cat_test == 0 then
-      PLUGIN_LIST, CAT, DEVELOPER_LIST = MakeFXFiles()
-  else
-      PLUGIN_LIST, CAT, DEVELOPER_LIST = fx_list_test, cat_test, dev_list_test
+        need_rebuild = true
+    else
+        -- If current stat couldn't be obtained, fall back to existing cache
+        if current_stat and saved_stat then
+            if not StatEquals(current_stat, saved_stat) then
+                need_rebuild = true
+            end
+        end
+    end
+
+    if need_rebuild then
+        PLUGIN_LIST, CAT, DEVELOPER_LIST = MakeFXFiles()
+        -- Save current stat for future comparisons
+        if current_stat then WriteStatFile(current_stat) end
+    else
+        PLUGIN_LIST, CAT, DEVELOPER_LIST = fx_list_test, cat_test, dev_list_test
+        -- Ensure we have a saved stat file; if missing but current_stat available, write it
+        if not saved_stat and current_stat then WriteStatFile(current_stat) end
     end
 
     -- Sort developer list alphabetically by display name
