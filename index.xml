@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="3fbd9fe7e6f933e2e98434b15bbb813ed74a2e70">
+<index version="1" name="7thResonance's Reaper Scripts" commit="361ac76aa437ef3bf5ac2199f7991552915dbc2c">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -135,6 +135,7 @@
 {\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Saves position and size of GUI\par}
 {\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Cache for quick search. Updates when new plugins are installed\par}
 {\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Settings for basic options\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS ReaScript and Imgui\par}
 }
 ]]></description>
         <link rel="screenshot">https://i.postimg.cc/DyqgzknJ/Screenshot-2025-07-11-062605.png</link>
@@ -176,6 +177,10 @@
       <version name="2.6" author="7thResonance" time="2025-08-19T19:35:25Z">
         <changelog><![CDATA[- Better Parsing using Sexan's FX Broswer PArser V7]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/27c08a47eaca617c8ec38c6b1773b64130931ef5/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
+      </version>
+      <version name="2.7" author="7thResonance" time="2025-08-27T18:50:11Z">
+        <changelog><![CDATA[- Improved scan update frequency]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/361ac76aa437ef3bf5ac2199f7991552915dbc2c/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
       </version>
     </reapack>
     <reapack name="7R Insert Instrument (Respecting Folders).lua" type="script" desc="7R Insert Instrument (Respecting Folders)">
