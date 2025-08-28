@@ -208,12 +208,17 @@ end
 -- Return list of watched files (keys -> full path)
 local function GetWatchedFiles()
     local rp = r.GetResourcePath()
+    -- Explicitly watch both common VST plugin cache files, fxtags (with and without .ini), and clap cache
     return {
-        vst = GetVSTPluginsFilePath(),                 -- reaper-vstplugins* (existing)
-        fxfolders = rp .. "/reaper-fxfolders.ini",   -- reaper-fxfolders
-        clap = rp .. "/reaper-clap-win64",          -- reaper-clap-win64
-        fxtags = rp .. "/reaper-fxtags.ini",        -- reaper-fxtags
-        jsfx = rp .. "/reaper-jsfx.ini",            -- reaper-jsfx
+        vst64 = rp .. "/reaper-vstplugins64",
+        vst64_ini = rp .. "/reaper-vstplugins64.ini",
+        vst = rp .. "/reaper-vstplugins",
+        vst_ini = rp .. "/reaper-vstplugins.ini",
+        fxfolders = rp .. "/reaper-fxfolders.ini",
+        clap = rp .. "/reaper-clap-win64",
+        fxtags = rp .. "/reaper-fxtags",
+        fxtags_ini = rp .. "/reaper-fxtags.ini",
+        jsfx = rp .. "/reaper-jsfx.ini",
     }
 end
 

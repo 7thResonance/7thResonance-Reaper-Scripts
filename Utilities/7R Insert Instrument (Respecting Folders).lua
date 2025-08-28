@@ -1,11 +1,9 @@
 --[[
 @description 7R Insert Instrument (Respecting Folders)
 @author 7thResonance
-@version 1.2
+@version 1.3
 @changelog
-     - Arrow keys for search item navigation
-     - Enter to insert highlighted instrument
-     - Imgui Fixfor latest update
+     - Added file check for cache rebuild.
 @donation https://paypal.me/7thresonance
 @about Original Folder Respect logic is by Aaron Cendan (Insert New Track Respect Folders)
   Uses that logic to insert instrument at the start,middle, or end of folders.
@@ -22,6 +20,135 @@ end
 local ctx = reaper.ImGui_CreateContext("Instrument Insert")
 local font = reaper.ImGui_CreateFont('sans-serif', 14)
 reaper.ImGui_Attach(ctx, font)
+
+-- SCRIPT PATH AND CACHE FILES
+local script_path = debug.getinfo(1, "S").source:match [[^@?(.*[\/])[^\/]-$]]
+local FX_FILE = script_path .. "/FX_LIST.txt"
+local FX_STAT_FILE = script_path .. "/FX_VST_STAT.txt"
+
+-- Simple serializer / deserializer for tables
+local function SerializeToFile(val, name, skipnewlines, depth)
+  skipnewlines = skipnewlines or false
+  depth = depth or 0
+  local tmp = string.rep(" ", depth)
+  if name then
+    if type(name) == "number" and math.floor(name) == name then
+      name = "[" .. name .. "]"
+    elseif not string.match(name, '^[a-zA-z_][a-zA-Z0-9_]*$') then
+      name = string.gsub(name, "'", "''")
+      name = "['" .. name .. "']"
+    end
+    tmp = tmp .. name .. " = "
+  end
+  if type(val) == "table" then
+    tmp = tmp .. "{" .. (not skipnewlines and "\n" or "")
+    for k, v in pairs(val) do
+      tmp = tmp .. SerializeToFile(v, k, skipnewlines, depth + 1) .. "," .. (not skipnewlines and "\n" or "")
+    end
+    tmp = tmp .. string.rep(" ", depth) .. "}"
+  elseif type(val) == "number" then
+    tmp = tmp .. tostring(val)
+  elseif type(val) == "string" then
+    tmp = tmp .. string.format("%q", val)
+  elseif type(val) == "boolean" then
+    tmp = tmp .. (val and "true" or "false")
+  else
+    tmp = tmp .. "nil"
+  end
+  return tmp
+end
+
+local function TableToString(t) return SerializeToFile(t) end
+
+local function StringToTable(str)
+  if not str or str == '' then return nil end
+  local f, err = load("return " .. str)
+  if not f then return nil end
+  local ok, res = pcall(f)
+  if ok then return res end
+  return nil
+end
+
+local function WriteToFile(path, data)
+  local f = io.open(path, "w")
+  if f then f:write(data); f:close() end
+end
+
+-- File stat helpers (requires JS_ReaScriptAPI)
+local function FileExists(path)
+  if not path then return false end
+  if not reaper.JS_File_Stat then return false end
+  local a, b, c = reaper.JS_File_Stat(path)
+  if type(a) == 'boolean' then return a end
+  if type(a) == 'number' then return true end
+  if type(a) == 'table' then return true end
+  return false
+end
+
+local function GetFileStat(path)
+  if not path or not reaper.JS_File_Stat then return nil end
+  local a, b, c = reaper.JS_File_Stat(path)
+  if type(a) == 'boolean' then
+    if not a then return nil end
+    return { path = path, size = tonumber(b) or 0, mtime = tonumber(c) or 0 }
+  elseif type(a) == 'number' then
+    return { path = path, size = tonumber(a) or 0, mtime = tonumber(b) or 0 }
+  elseif type(a) == 'table' then
+    return { path = path, size = tonumber(a.size) or 0, mtime = tonumber(a.mtime) or 0 }
+  end
+  return nil
+end
+
+local function ReadStatFile()
+  local f = io.open(FX_STAT_FILE, 'r')
+  if not f then return nil end
+  local s = f:read('*all')
+  f:close()
+  local ok, tbl = pcall(function() return StringToTable(s) end)
+  if ok and type(tbl) == 'table' then return tbl end
+  return nil
+end
+
+local function WriteStatFile(stat_tbl)
+  if not stat_tbl then return end
+  local s = TableToString(stat_tbl)
+  WriteToFile(FX_STAT_FILE, s)
+end
+
+local function StatEquals(a, b)
+  if not a or not b then return false end
+  if a.path ~= b.path then return false end
+  if tonumber(a.size) ~= tonumber(b.size) then return false end
+  if tonumber(a.mtime) ~= tonumber(b.mtime) then return false end
+  return true
+end
+
+local function GetVSTPluginsFilePath()
+  local rp = reaper.GetResourcePath()
+  local candidates = {
+    rp .. "/reaper-vstplugins64",
+    rp .. "/reaper-vstplugins64.ini",
+    rp .. "/reaper-vstplugins",
+    rp .. "/reaper-vstplugins.ini",
+  }
+  for i = 1, #candidates do if FileExists(candidates[i]) then return candidates[i] end end
+  return candidates[1]
+end
+
+local function GetWatchedFiles()
+  local rp = reaper.GetResourcePath()
+  return {
+    vst64 = rp .. "/reaper-vstplugins64",
+    vst64_ini = rp .. "/reaper-vstplugins64.ini",
+    vst = rp .. "/reaper-vstplugins",
+    vst_ini = rp .. "/reaper-vstplugins.ini",
+    fxfolders = rp .. "/reaper-fxfolders.ini",
+    clap = rp .. "/reaper-clap-win64",
+    fxtags = rp .. "/reaper-fxtags",
+    fxtags_ini = rp .. "/reaper-fxtags.ini",
+    jsfx = rp .. "/reaper-jsfx.ini",
+  }
+end
 
 -- GLOBAL VARIABLES
 local window_open = true
@@ -664,11 +791,56 @@ end
 function init()
   -- Load settings first
   load_settings()
-  
-  -- Scan for instruments
-  instrument_list = scan_instruments()
-  filtered_instruments = instrument_list
-  
+
+  -- Attempt to read a cached FX list if present
+  local fx_list_cached = nil
+  local f = io.open(FX_FILE, 'r')
+  if f then
+    local s = f:read('*all')
+    f:close()
+    fx_list_cached = StringToTable(s)
+  end
+
+  -- Build current watched file stats
+  local watched = GetWatchedFiles()
+  local current_stats = {}
+  for key, path in pairs(watched) do
+    local st = GetFileStat(path)
+    if st then current_stats[key] = st end
+  end
+
+  local saved_stats = ReadStatFile() or {}
+
+  local need_rebuild = false
+  if not fx_list_cached or #fx_list_cached == 0 then
+    need_rebuild = true
+  else
+    for key, cur in pairs(current_stats) do
+      local prev = saved_stats[key]
+      if not prev or not StatEquals(cur, prev) then need_rebuild = true; break end
+    end
+    if not need_rebuild then
+      for key, prev in pairs(saved_stats) do
+        if not current_stats[key] then need_rebuild = true; break end
+      end
+    end
+  end
+
+  if need_rebuild then
+    -- Re-scan using REAPER API enumeration
+    instrument_list = scan_instruments()
+    -- Persist a simple cache (list only) for future quick reads
+    if instrument_list and #instrument_list > 0 then
+      local serialized = TableToString(instrument_list)
+      WriteToFile(FX_FILE, serialized)
+    end
+    if next(current_stats) then WriteStatFile(current_stats) end
+  else
+    instrument_list = fx_list_cached
+  end
+
+  filtered_instruments = instrument_list or {}
+
   -- Focus search box
   reaper.ImGui_SetNextWindowFocus(ctx)
 end
