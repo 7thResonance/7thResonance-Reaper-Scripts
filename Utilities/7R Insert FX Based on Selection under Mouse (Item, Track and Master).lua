@@ -1,8 +1,8 @@
 --[[
 @description 7R Insert FX Based on Selection under Mouse cursor (Track or Item, Master)
 @author 7thResonance
-@version 2.7
-@changelog - Improved scan update frequency
+@version 2.8
+@changelog - Added more watch folders for changes
 @donation https://paypal.me/7thresonance
 @about Opens GUI for track, item or master under cursor with GUI to select FX
     - Saves position and size of GUI
@@ -203,6 +203,18 @@ local function GetFileStat(path)
         return { path = path, size = tonumber(a.size) or 0, mtime = tonumber(a.mtime) or 0 }
     end
     return nil
+end
+
+-- Return list of watched files (keys -> full path)
+local function GetWatchedFiles()
+    local rp = r.GetResourcePath()
+    return {
+        vst = GetVSTPluginsFilePath(),                 -- reaper-vstplugins* (existing)
+        fxfolders = rp .. "/reaper-fxfolders.ini",   -- reaper-fxfolders
+        clap = rp .. "/reaper-clap-win64",          -- reaper-clap-win64
+        fxtags = rp .. "/reaper-fxtags.ini",        -- reaper-fxtags
+        jsfx = rp .. "/reaper-jsfx.ini",            -- reaper-jsfx
+    }
 end
 
 local function ReadStatFile()
@@ -1309,32 +1321,44 @@ local function init()
 
     -- Use parser's caching mechanism
     local fx_list_test, cat_test, dev_list_test = ReadFXFile()
+    -- Check multiple watched files' stats and compare with cached stat table to decide rebuild
+    local watched = GetWatchedFiles()
+    local current_stats = {}
+    for key, path in pairs(watched) do
+        local st = GetFileStat(path)
+        if st then current_stats[key] = st end
+    end
 
-    -- Check VST plugins file stat and compare with cached stat to decide whether to rebuild
-    local vst_file = GetVSTPluginsFilePath()
-    local current_stat = GetFileStat(vst_file)
-    local saved_stat = ReadStatFile()
+    local saved_stats = ReadStatFile() or {}
 
     local need_rebuild = false
     if not fx_list_test or #fx_list_test == 0 or not cat_test or #cat_test == 0 then
         need_rebuild = true
     else
-        -- If current stat couldn't be obtained, fall back to existing cache
-        if current_stat and saved_stat then
-            if not StatEquals(current_stat, saved_stat) then
+        -- If any watched file's stat differs or a previously watched file is missing, rebuild
+        for key, cur in pairs(current_stats) do
+            local prev = saved_stats[key]
+            if not prev or not StatEquals(cur, prev) then
                 need_rebuild = true
+                break
+            end
+        end
+        -- Also if saved_stats had keys that are now missing (file removed), trigger rebuild
+        if not need_rebuild then
+            for key, prev in pairs(saved_stats) do
+                if not current_stats[key] then need_rebuild = true; break end
             end
         end
     end
 
     if need_rebuild then
         PLUGIN_LIST, CAT, DEVELOPER_LIST = MakeFXFiles()
-        -- Save current stat for future comparisons
-        if current_stat then WriteStatFile(current_stat) end
+        -- Save current combined stats for future comparisons
+        if next(current_stats) then WriteStatFile(current_stats) end
     else
         PLUGIN_LIST, CAT, DEVELOPER_LIST = fx_list_test, cat_test, dev_list_test
-        -- Ensure we have a saved stat file; if missing but current_stat available, write it
-        if not saved_stat and current_stat then WriteStatFile(current_stat) end
+        -- Ensure we have a saved stat file; if missing but we have current stats, write it
+        if (not saved_stats or next(saved_stats) == nil) and next(current_stats) then WriteStatFile(current_stats) end
     end
 
     -- Sort developer list alphabetically by display name
