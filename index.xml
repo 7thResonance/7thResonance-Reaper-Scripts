@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="a5e412503f7a875d5facdb084bdc6a03415e2152">
+<index version="1" name="7thResonance's Reaper Scripts" commit="8111f38c2d4b742487e08420d6f70b1d89f8eb62">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -211,6 +211,10 @@
 - Enter to insert highlighted instrument
 - Imgui Fixfor latest update]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/60293cec30b39eb0edaeca718f64f612c1b28f8f/Utilities/7R%20Insert%20Instrument%20(Respecting%20Folders).lua</source>
+      </version>
+      <version name="1.3" author="7thResonance" time="2025-08-28T11:57:57Z">
+        <changelog><![CDATA[- Added file check for cache rebuild.]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/8111f38c2d4b742487e08420d6f70b1d89f8eb62/Utilities/7R%20Insert%20Instrument%20(Respecting%20Folders).lua</source>
       </version>
     </reapack>
     <reapack name="7R Insert Project or Take Marker at mouse pointer.lua" type="script" desc="7R Insert Project/Take Marker at mouse pointer">
