@@ -1,9 +1,9 @@
 --[[
-@desc: Tubify
-@author: 7thResonance
-@version: 1.0
-@provides: [effect]
-@about: Multiband version of chmaha's airwindows port of tube2
+@desc Tubify
+@author 7thResonance
+@version 1.0
+@provides [effect]
+@about Multiband version of chmaha's airwindows port of tube2
 --]]
 
 // Zero-latency 4-band saturation JSFX
