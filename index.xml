@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance" commit="70837b87a06c6a128f7f88b73c9cb331323fb948">
+<index version="1" name="7thResonance" commit="7b83a721ff8f0d61020dcc124cb4172daa6ba52f">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -28,6 +28,11 @@
     </reapack>
   </category>
   <category name="JSFX">
+    <reapack name="7R Oscilloscope.jsfx" type="effect" desc="7R Oscilloscope">
+      <version name="1.0" time="2025-09-21T15:31:52Z">
+        <source>https://github.com/7thResonance/7thResonance/raw/7b83a721ff8f0d61020dcc124cb4172daa6ba52f/JSFX/7R%20Oscilloscope.jsfx</source>
+      </version>
+    </reapack>
     <reapack name="7R Tubify.jsfx" type="effect">
       <version name="1.0" author="7thResonance" time="2025-09-21T14:43:03Z">
         <source>https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/67407b753ba42d36d656c1da8829b3ebce560fb2/JSFX/7R%20Tubify.jsfx</source>
