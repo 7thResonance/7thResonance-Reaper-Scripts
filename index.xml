@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance" commit="7210df482a75e3742224b3dcf95b18c794642178">
+<index version="1" name="7thResonance" commit="93c7fd54d6776ba03ec3e5b0212b9140ac77bb0f">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -39,6 +39,9 @@
       </version>
       <version name="1.1" time="2025-09-21T15:42:58Z">
         <source>https://github.com/7thResonance/7thResonance/raw/7210df482a75e3742224b3dcf95b18c794642178/JSFX/7R%20Tubify.jsfx</source>
+      </version>
+      <version name="1.2" time="2025-09-21T16:08:18Z">
+        <source>https://github.com/7thResonance/7thResonance/raw/93c7fd54d6776ba03ec3e5b0212b9140ac77bb0f/JSFX/7R%20Tubify.jsfx</source>
       </version>
     </reapack>
   </category>
@@ -467,8 +470,8 @@ Doesnt create send if folder.]]></changelog>
 {\pard \ql \f0 \sa180 \li0 \fi0 This only exists so that other people can make use of it.\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Check out my Music if you wanna hear some orchestral bs. 7thResonance on Spotify\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 If any issues, i can try and fix them. Either post on githib, Reaper forums page or Discord\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Reapack Repository URL: https://raw.githubusercontent.com/7thResonance/7thResonance-Reaper-Scripts/refs/heads/master/index.xml\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Github: https://github.com/7thResonance/7thResonance-Reaper-Scripts\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Reapack Repository URL: https://raw.githubusercontent.com/7thResonance/7thResonance/refs/heads/master/index.xml\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Github: https://github.com/7thResonance/7thResonance\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Discord: https://discord.com/invite/Y7MWJgB4mc\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Donation https://paypal.me/7thresonance\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Scripts;\par}
