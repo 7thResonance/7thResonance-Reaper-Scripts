@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="67407b753ba42d36d656c1da8829b3ebce560fb2">
+<index version="1" name="7thResonance" commit="67407b753ba42d36d656c1da8829b3ebce560fb2">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
