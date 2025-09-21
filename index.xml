@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance" commit="7b83a721ff8f0d61020dcc124cb4172daa6ba52f">
+<index version="1" name="7thResonance" commit="7210df482a75e3742224b3dcf95b18c794642178">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -36,6 +36,9 @@
     <reapack name="7R Tubify.jsfx" type="effect">
       <version name="1.0" author="7thResonance" time="2025-09-21T14:43:03Z">
         <source>https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/67407b753ba42d36d656c1da8829b3ebce560fb2/JSFX/7R%20Tubify.jsfx</source>
+      </version>
+      <version name="1.1" time="2025-09-21T15:42:58Z">
+        <source>https://github.com/7thResonance/7thResonance/raw/7210df482a75e3742224b3dcf95b18c794642178/JSFX/7R%20Tubify.jsfx</source>
       </version>
     </reapack>
   </category>
