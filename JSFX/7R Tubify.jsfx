@@ -1,3 +1,12 @@
+--[[
+@desc Tubify
+@author 7thResonance
+@version 1.0
+@about Simple atan-based Multiband Saturator
+--]]
+
+
+
 // Zero-latency 3-band saturation JSFX
 // - 3 bands via two Linkwitz-Riley style crossovers (implemented as cascaded 2nd-order Butterworth LPs)
 // - per-band saturation (simple soft saturation derived from Tube-like idea)
