@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance's Reaper Scripts" commit="8111f38c2d4b742487e08420d6f70b1d89f8eb62">
+<index version="1" name="7thResonance's Reaper Scripts" commit="67407b753ba42d36d656c1da8829b3ebce560fb2">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -24,6 +24,22 @@
       <version name="1.0" author="7thResonance" time="2025-08-24T16:59:15Z">
         <changelog><![CDATA[- intital]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/3fbd9fe7e6f933e2e98434b15bbb813ed74a2e70/Editing/7R%20Untrim%20Item%20to%20source%20Length%20(until%20other%20item%20edge).lua</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="JSFX">
+    <reapack name="7R Tubify.jsfx" type="effect" desc="Tubify">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Simple atan-based Multiband Saturator\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="7thResonance" time="2025-09-21T14:43:03Z">
+        <source>https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/67407b753ba42d36d656c1da8829b3ebce560fb2/JSFX/7R%20Tubify.jsfx</source>
       </version>
     </reapack>
   </category>
