@@ -1,0 +1,348 @@
+version 1.0
+desc:7R Oscilloscope
+
+
+in_pin:left input
+in_pin:right input
+options:no_meter
+
+
+
+@init
+gfx_ext_flags |= 0x100 | 0x200;
+gfx_ext_retina == 0 ? gfx_ext_retina = 1;
+ext_nodenorm=1;
+recpos=0;
+gfx_clear=-1;
+g_maxlen_ms=5000;
+histsize=((srate*2.0*g_maxlen_ms/1000)|0)*2;
+
+// Initialize smoothing variables
+smooth_factor = 1; // Smoothing disabled
+prev_left = 0;
+prev_right = 0;
+
+
+
+
+// Zero-crossing pitch detection parameters (for 40-5000 Hz)
+zc_bufsize = max(2048, (srate/40)|0); // buffer covers down to 40 Hz
+zc_buf = 0;
+zc_period = 0;
+zc_pitch = 0;
+zc_last = 0;
+zc_counter = 0;
+zc_update_interval = 1; // update every block for fastest response
+
+// UI defaults: retrig ascending, range auto, length auto
+view_retrig = 2; // ascending
+view_maxdb = 0; // auto range (0dB)
+view_msec = 0; // auto length (period-locked)
+
+@block 
+g_last_wr = time_precise();
+
+
+@sample
+// Fade-out expander logic for smoother silence handling (only affects fade level)
+fade_factor = 0.01; // maximum fade speed (instant fade-out)
+fade_left = prev_left;
+fade_right = prev_right;
+threshold = 0.000001; // -120 dB linear
+abs(spl0) < threshold ? (
+  fade_left = fade_left * fade_factor;
+) : (
+  fade_left = spl0;
+);
+abs(spl1) < threshold ? (
+  fade_right = fade_right * fade_factor;
+) : (
+  fade_right = spl1;
+);
+prev_left = fade_left;
+prev_right = fade_right;
+// Feature 1: Sum L+R for display (does not affect output)
+sum = (spl0 + spl1) * 0.5;
+recpos[0]=sum;
+recpos[1]=sum;
+recpos = (recpos+2) >= histsize ? 0 : (recpos+2);
+
+
+// --- Zero-crossing pitch detection for full range (40-5000 Hz) ---
+zc_buf[zc_last] = sum;
+zc_last += 1;
+
+zc_last >= zc_bufsize ? (
+  zc_last = 0;
+  zc_counter += 1;
+  zc_counter >= zc_update_interval ? (
+    zc_counter = 0;
+    // Check peak in buffer
+    peak_zc = 0;
+    i = 0;
+    loop(zc_bufsize,
+      absval = abs(zc_buf[i]);
+      absval > peak_zc ? peak_zc = absval;
+      i += 1;
+    );
+    // Only update period if peak is above threshold
+    zc_threshold = 0.001; // -60 dB linear
+    peak_zc > zc_threshold ? (
+      // Count zero crossings in buffer
+      crossings = 0;
+      last_sign = zc_buf[0] >= 0 ? 1 : -1;
+      i = 1;
+      first_cross = -1;
+      last_cross = -1;
+      loop(zc_bufsize-1,
+        s = zc_buf[i] >= 0 ? 1 : -1;
+        s != last_sign ? (
+          crossings += 1;
+          last_sign = s;
+          first_cross < 0 ? first_cross = i;
+          last_cross = i;
+        );
+        i += 1;
+      );
+      // Estimate period and pitch
+      periods = crossings / 2;
+      (periods >= 1 && last_cross > first_cross) ? (
+        avg_period = (last_cross - first_cross) / periods;
+        zc_period = avg_period;
+        zc_pitch = avg_period > 0 ? srate / avg_period : 0;
+      );
+      // If not valid, keep previous period
+    );
+    // If peak is below threshold, do not update zc_period
+  );
+);
+
+
+@gfx 640 400
+small_mode = gfx_w<200*gfx_ext_retina || gfx_h<100*gfx_ext_retina;
+gfx_ext_retina>1 ? gfx_setfont(1,"Arial",16*gfx_ext_retina,'b') : gfx_setfont(0);
+
+gfx_getchar(); // request mouse_cap to be set even when mouse button not down
+
+
+// --- Use zero-crossing period for auto window ---
+zc_period > 0 ? (
+  view_msec = zc_period*1000/srate;
+) : (
+  view_msec = 100; // fallback default
+);
+viewsize_spls = (view_msec*srate*0.001)|0;
+
+function color1() ( gfx_r=0; gfx_g=0; gfx_b=1.0; );
+function color2() ( gfx_r=0; gfx_g=0; gfx_b=1.0; );
+
+
+function format_time_msec(a) (
+  abs(a) < 1000 ? 
+    sprintf(#,"%.02fms",a + 0.005) : 
+    sprintf(#,"%.02fs",a*0.001 + 0.005);
+);
+
+function format_time_msec_hz(b)(
+  b > 1 ? 
+    b > 250 ? 
+      sprintf(#,small_mode ? "%.1fs":"%.02fs",b*0.001 + 0.005) : 
+    sprintf(#,small_mode ? "%dHz":"%d Hz",1000/b+0.5) : 
+  sprintf(#,small_mode?"%.1fk":"%.1f kHz",1/b + 0.05); 
+); 
+
+// All mouse wheel and slider automation code removed for static UI
+
+rdoffs = view_retrig >= 1.0 ? 0 : max(0,max(srate*1/20, samplesblock*2) - (time_precise() - g_last_wr)*srate)|0;
+recpos_u = recpos - rdoffs*2;
+recpos_u < 0 ? recpos_u += histsize;
+
+
+view_msec_rounded = view_msec;
+viewsize_spls = (view_msec*srate*0.001)|0;
+viewadv = gfx_w/viewsize_spls;
+// when zoomed out, adjust interval so that each peak represents a discrete number of samples
+viewadvn = floor(1/viewadv + 0.5);
+viewadvn > 8 ? (
+  viewsize_spls = viewadvn * gfx_w;
+  viewadv = 1/viewadvn;
+  view_msec_rounded = viewsize_spls*1000/srate;
+  recpos_u = floor(recpos_u/(viewadvn*2))*viewadvn*2;
+) : viewadvn=0;
+
+// always update view
+view_maxdb_last = view_maxdb;
+recpos_u_last = recpos_u;
+old_w=gfx_w; old_h=gfx_h;
+
+// Clamp view_maxdb to [-60, 0] dB range
+view_maxdb < -60 ? view_maxdb = -60;
+view_maxdb > 0 ? view_maxdb = 0;
+
+gfx_r=gfx_g=gfx_b=0; gfx_a=1;
+gfx_x=gfx_y=0;
+gfx_rectto(gfx_w,gfx_h);
+
+scope_h = ((gfx_h-gfx_texth*2-6-4)*0.5)|0;
+scope_ycent = gfx_h - scope_h - gfx_texth - 4;
+
+// Feature 2: Normalization for 0dBFS display (always enabled)
+norm_factor = 1;
+// Find peak in current view
+peak = 0;
+tmp_rdptr = recpos_u - viewsize_spls*2 - 2;
+tmp_rdptr < 0 ? tmp_rdptr += histsize;
+i = 0;
+loop(viewsize_spls,
+  absval = abs(tmp_rdptr[0]);
+  absval > peak ? peak = absval;
+  absval = abs(tmp_rdptr[1]);
+  absval > peak ? peak = absval;
+  (tmp_rdptr+=2) >= histsize ? tmp_rdptr=0;
+  i += 1;
+);
+peak > 0 ? norm_factor = 1/peak : norm_factor = 1;
+
+sc= exp(-view_maxdb*(log(10)/20)) * scope_h * norm_factor;
+
+rdptr = recpos_u - viewsize_spls*2 - 2;
+rdptr < 0 ? rdptr += histsize;
+view_retrig >= 1.0 ? (
+  rdptr2 = recpos - 2;
+  rdptr2 < 0 ? rdptr2 += histsize;
+  pos = 0;
+  ll = rdptr2[0]; lr=rdptr2[1];
+  while(
+    pos < viewsize_spls ? (
+      rdptr2 -= 2;
+      rdptr2 < 0 ? rdptr2 += histsize;
+      l = rdptr2[0]; r=rdptr2[1];
+
+      ((view_retrig|0)==2 ? ((l>=0) && (ll<0) || ((r>=0) && (lr<0))) :
+      (view_retrig|0)==3 ? ((l<=0) && (ll>0) || ((r<=0) && (lr>0))) :
+      ((l<0) != (ll<0) || (r<0) != (lr<0))) ? (
+        rdptr=rdptr2 + 2 - viewsize_spls*2;
+        rdptr < 0 ? rdptr += histsize;
+        0;
+      ):(lr=r; ll=l; pos+=1; );
+    );    
+  );
+);
+
+rdptr >= histsize ? rdptr -= histsize;
+x=0;
+viewadv < 1 ? (
+ // multiple samples per pixel
+  lx=0;
+  i=0;
+  minl=maxl=rdptr[0]; minr=maxr=rdptr[1];
+  (rdptr+=2) >= histsize ? rdptr=0;
+  loop(viewsize_spls,
+    tx=(x|0);
+    tx>lx?(
+      minl = min(max(-1,(scope_ycent+0.5-minl*sc)|0),gfx_h+2);
+      maxl = min(max(-1,(scope_ycent+0.5-maxl*sc)|0),gfx_h+2);
+      minr = min(max(-1,(scope_ycent+0.5-minr*sc)|0),gfx_h+2);
+      maxr = min(max(-1,(scope_ycent+0.5-maxr*sc)|0),gfx_h+2);
+      
+      gfx_a=0.25;
+      color1();
+      maxl-1 > scope_ycent ? gfx_line(lx,maxl-1,lx,scope_ycent) : 
+      minl+1 < scope_ycent ? gfx_line(lx,minl+1,lx,scope_ycent);
+
+      color2();
+      maxr-1 > scope_ycent ? gfx_line(lx,maxr-1,lx,scope_ycent) : 
+      minr+1 < scope_ycent ? gfx_line(lx,minr+1,lx,scope_ycent);
+           
+      color1();
+      gfx_a=.6;
+      gfx_line(lx,minl,lx,maxl);
+      color2();
+      gfx_line(lx,minr,lx,maxr);
+
+      minl=maxl=rdptr[0]; 
+      minr=maxr=rdptr[1];
+      lx=tx;
+    ) : (
+      minl=min(minl,v = rdptr[0]); maxl=max(maxl,v);
+      minr=min(minr,v2 = rdptr[1]); maxr=max(maxr,v2);
+    );
+    (rdptr+=2) >= histsize ? rdptr=0;
+    x+=viewadv;
+  );
+  // last pixel
+  minl = min(max(-1,(scope_ycent+0.5-minl*sc)|0),gfx_h+2);
+  maxl = min(max(-1,(scope_ycent+0.5-maxl*sc)|0),gfx_h+2);
+  minr = min(max(-1,(scope_ycent+0.5-minr*sc)|0),gfx_h+2);
+  maxr = min(max(-1,(scope_ycent+0.5-maxr*sc)|0),gfx_h+2);
+  color1();
+  gfx_a=0.35;
+  maxl-1 > scope_ycent ? gfx_line(lx,maxl-1,lx,scope_ycent) : 
+  minl+1 < scope_ycent ? gfx_line(lx,minl+1,lx,scope_ycent);
+
+  color2();
+  maxr-1 > scope_ycent ? gfx_line(lx,maxr-1,lx,scope_ycent) : 
+  minr+1 < scope_ycent ? gfx_line(lx,minr+1,lx,scope_ycent);
+      
+  gfx_a=.6;
+  color1();
+  gfx_line(lx,minl,lx,maxl);
+  color2();
+gfx_line(lx,minr,lx,maxr);  
+  
+) : ( 
+  maxval=scope_h+64;
+  // multiple pixels per sample
+  i=viewsize_spls&1;
+  loop(viewsize_spls,
+    x1 = x|0;
+    x2 = (x+=viewadv)|0;
+    
+    viewadv<3 ? (
+      color1();
+      
+      loop(2,
+        v = (rdptr[0] * sc)|0;
+        
+        gfx_a=.25;
+        v < 0 ? (
+          v < -maxval ? v=-maxval;
+          gfx_rect(x1,scope_ycent,x2-x1,-v)
+        ) : (
+          v > maxval ? v=maxval;
+          gfx_rect(x1,scope_ycent-v,x2-x1,v);      
+        );
+        gfx_a=.6;
+        gfx_rect(x1,scope_ycent-v,x2-x1,1);
+
+        rdptr+=1;
+        color2();
+      );
+    
+    ) : (
+      color1();
+      
+      loop(2,
+        gfx_a=(i&1) ? 0.25:0.125;
+        v = (rdptr[0] * sc)|0;
+        v < 0 ? (
+          v < -maxval ? v=-maxval;
+          gfx_rect(x1,scope_ycent,x2-x1,-v) 
+        ) : (
+          v > maxval ? v=maxval;
+          gfx_rect(x1,scope_ycent-v,x2-x1,v);      
+        );
+        gfx_a=0.6;
+        gfx_rect(x1,scope_ycent-v,x2-x1,1);
+        rdptr+=1;
+        color2();
+        i+=1;
+      );
+      i+=1;
+    );
+    rdptr >= histsize ? rdptr=0;
+  );
+)
+
+
+

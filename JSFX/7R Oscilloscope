@@ -1,0 +1,10 @@
+--[[
+@desc 7R Oscilloscope
+@author 7thResonance
+@version 1.0
+@provides [effect] JSFX\7R Oscilloscope.jsfx
+@about modded version of the cockos oscilloscope.
+    - only normalised mode
+    - clean display for docking to master channel
+    - Imperfect period tracking to see waveform shape
+--]]
