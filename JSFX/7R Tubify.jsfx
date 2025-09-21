@@ -1,32 +1,26 @@
---[[
-@desc Tubify
-@author 7thResonance
-@version 1.0
-@provides [effect]
-@about Multiband version of chmaha's airwindows port of tube2
---]]
-
-// Zero-latency 4-band saturation JSFX
-// - 4 bands via two Linkwitz-Riley style crossovers (implemented as cascaded 2nd-order Butterworth LPs)
-// - per-band saturation (simple soft saturation derived from Tube-like idea and Tube 2 by airwindows which was ported over by chmaha)
+// Zero-latency 3-band saturation JSFX
+// - 3 bands via two Linkwitz-Riley style crossovers (implemented as cascaded 2nd-order Butterworth LPs)
+// - per-band saturation (simple soft saturation derived from Tube-like idea)
 // - output gain (dB) and mix (dry/wet)
 // - zero added latency (IIR filters only)
 
 desc:Tubify
-author:7thResonance
 
 slider1:0.0<-24,24,0.1>Input
 slider2:100<0,100,1>Mix
-slider3:100<20,2000,1>Low/Mid Xover (Hz)
-slider4:400<100,20000,1>Mid/High Xover (Hz)
-slider5:8000<200,20000,1>Upper Xover (Hz)
-slider6:0.0<0,10,0.01>Low Drive
-slider7:0.0<0,10,0.01>Mid Drive
-slider8:0.0<0,10,0.01>Upper-Mid Drive
-slider9:0.0<0,10,0.01>High Drive
-slider10:1<0,1,1>Active
-slider11:0.0<-24,24,0.1>Output Gain (dB)
-slider12:0<0,1,1>Algorithm (0=Simple,1=Tube2)
+slider4:100<20,2000,1>Low/Mid Xover (Hz)
+slider5:400<100,20000,1>Mid/High Xover (Hz)
+slider6:8000<200,20000,1>Upper Xover (Hz)
+slider8:0.0<0,10,0.01>Low Drive
+slider9:0.0<0,10,0.01>Mid Drive
+slider10:0.0<0,10,0.01>Upper-Mid Drive
+slider11:0.0<0,10,0.01>High Drive
+// (slot 12 left empty for UI separation)
+slider13:0.0<-12,12,0.1>Post Low Gain (dB)
+slider14:0.0<-12,12,0.1>Post Low-Mid Gain (dB)
+slider15:0.0<-12,12,0.1>Post Mid-Upper Gain (dB)
+slider16:0.0<-12,12,0.1>Post High Gain (dB)
+slider17:0.0<-24,24,0.1>Output Gain (dB)
 
 in_pin:left input
 in_pin:right input
@@ -38,43 +32,31 @@ out_pin:right output
 Q = 0.7071067811865476;
 
 // per-sample state initialization for all biquad stages (set to 0 implicitly)
-lpf1_s1_x1L = 0; lpf1_s1_x2L = 0; lpf1_s1_y1L = 0; lpf1_s1_y2L = 0;
-lpf1_s2_x1L = 0; lpf1_s2_x2L = 0; lpf1_s2_y1L = 0; lpf1_s2_y2L = 0;
+lpf1_s1_x1L; lpf1_s1_x2L; lpf1_s1_y1L; lpf1_s1_y2L;
+lpf1_s2_x1L; lpf1_s2_x2L; lpf1_s2_y1L; lpf1_s2_y2L;
 
-lpf1_s1_x1R = 0; lpf1_s1_x2R = 0; lpf1_s1_y1R = 0; lpf1_s1_y2R = 0;
-lpf1_s2_x1R = 0; lpf1_s2_x2R = 0; lpf1_s2_y1R = 0; lpf1_s2_y2R = 0;
+lpf1_s1_x1R; lpf1_s1_x2R; lpf1_s1_y1R; lpf1_s1_y2R;
+lpf1_s2_x1R; lpf1_s2_x2R; lpf1_s2_y1R; lpf1_s2_y2R;
 
-lpf2_s1_x1L = 0; lpf2_s1_x2L = 0; lpf2_s1_y1L = 0; lpf2_s1_y2L = 0;
-lpf2_s2_x1L = 0; lpf2_s2_x2L = 0; lpf2_s2_y1L = 0; lpf2_s2_y2L = 0;
+lpf2_s1_x1L; lpf2_s1_x2L; lpf2_s1_y1L; lpf2_s1_y2L;
+lpf2_s2_x1L; lpf2_s2_x2L; lpf2_s2_y1L; lpf2_s2_y2L;
 
-lpf2_s1_x1R = 0; lpf2_s1_x2R = 0; lpf2_s1_y1R = 0; lpf2_s1_y2R = 0;
-lpf2_s2_x1R = 0; lpf2_s2_x2R = 0; lpf2_s2_y1R = 0; lpf2_s2_y2R = 0;
+lpf2_s1_x1R; lpf2_s1_x2R; lpf2_s1_y1R; lpf2_s1_y2R;
+lpf2_s2_x1R; lpf2_s2_x2R; lpf2_s2_y1R; lpf2_s2_y2R;
 
 // third crossover filter states (for 4-band split)
-lpf3_s1_x1L = 0; lpf3_s1_x2L = 0; lpf3_s1_y1L = 0; lpf3_s1_y2L = 0;
-lpf3_s2_x1L = 0; lpf3_s2_x2L = 0; lpf3_s2_y1L = 0; lpf3_s2_y2L = 0;
+lpf3_s1_x1L; lpf3_s1_x2L; lpf3_s1_y1L; lpf3_s1_y2L;
+lpf3_s2_x1L; lpf3_s2_x2L; lpf3_s2_y1L; lpf3_s2_y2L;
 
-lpf3_s1_x1R = 0; lpf3_s1_x2R = 0; lpf3_s1_y1R = 0; lpf3_s1_y2R = 0;
-lpf3_s2_x1R = 0; lpf3_s2_x2R = 0; lpf3_s2_y1R = 0; lpf3_s2_y2R = 0;
+lpf3_s1_x1R; lpf3_s1_x2R; lpf3_s1_y1R; lpf3_s1_y2R;
+lpf3_s2_x1R; lpf3_s2_x2R; lpf3_s2_y1R; lpf3_s2_y2R;
 
 // biquad coefficients placeholders
-b0 = 0; b1 = 0; b2 = 0; a1 = 0; a2 = 0;
-b0_2 = 0; b1_2 = 0; b2_2 = 0; a1_2 = 0; a2_2 = 0;
-b0_3 = 0; b1_3 = 0; b2_3 = 0; a1_3 = 0; a2_3 = 0;
+b0; b1; b2; a1; a2;
+b0_2; b1_2; b2_2; a1_2; a2_2;
+b0_3; b1_3; b2_3; a1_3; a2_3;
 
-// Per-band Tube2 state variables (previousSampleA..F) for each band and channel
-// low band
-prevLowA_L = 0; prevLowB_L = 0; prevLowC_L = 0; prevLowD_L = 0; prevLowE_L = 0; prevLowF_L = 0;
-prevLowA_R = 0; prevLowB_R = 0; prevLowC_R = 0; prevLowD_R = 0; prevLowE_R = 0; prevLowF_R = 0;
-// low-mid band
-prevLowMidA_L = 0; prevLowMidB_L = 0; prevLowMidC_L = 0; prevLowMidD_L = 0; prevLowMidE_L = 0; prevLowMidF_L = 0;
-prevLowMidA_R = 0; prevLowMidB_R = 0; prevLowMidC_R = 0; prevLowMidD_R = 0; prevLowMidE_R = 0; prevLowMidF_R = 0;
-// mid-upper band
-prevMidUpA_L = 0; prevMidUpB_L = 0; prevMidUpC_L = 0; prevMidUpD_L = 0; prevMidUpE_L = 0; prevMidUpF_L = 0;
-prevMidUpA_R = 0; prevMidUpB_R = 0; prevMidUpC_R = 0; prevMidUpD_R = 0; prevMidUpE_R = 0; prevMidUpF_R = 0;
-// high band
-prevHighA_L = 0; prevHighB_L = 0; prevHighC_L = 0; prevHighD_L = 0; prevHighE_L = 0; prevHighF_L = 0;
-prevHighA_R = 0; prevHighB_R = 0; prevHighC_R = 0; prevHighD_R = 0; prevHighE_R = 0; prevHighF_R = 0;
+
 
 @block
 // read sliders (per-block)
@@ -83,72 +65,27 @@ inputPadDB = slider1;
 inputPad = pow(10.0, inputPadDB * 0.05);
 // slider2 is percent 0..100; convert to 0..1 mix
 mix = slider2 * 0.01;
-outGainDB = slider11;
-xover1 = slider3;
-xover2 = slider4;
-// xover3 now uses slider5 (moved)
-xover3 = slider5;
-// drives: low=6, mid=7, upper-mid=8, high=9
-lowDrive = slider6;
-midDrive = slider7;
-upperDrive = slider8;
-highDrive = slider9;
-onOff = slider10;
-// algorithm toggle: 0 = simple cheap saturator, 1 = Tube2 per-band
-useTube = (slider12 >= 0.5) ? 1.0 : 0.0;
+outGainDB = slider17;
+// xovers now at sliders 4,5,6
+xover1 = slider4;
+xover2 = slider5;
+// xover3 now uses slider6
+xover3 = slider6;
+// drives: low=8, mid=9, upper-mid=10, high=11
+lowDrive = slider8;
+midDrive = slider9;
+upperDrive = slider10;
+highDrive = slider11;
 
-// per-band processing enable flags (short-circuit when drive == 0)
-doLowProc = (lowDrive > 0.0) ? 1.0 : 0.0;
-doMidProc = (midDrive > 0.0) ? 1.0 : 0.0;
-doUpperProc = (upperDrive > 0.0) ? 1.0 : 0.0;
-doHighProc = (highDrive > 0.0) ? 1.0 : 0.0;
 
-// precompute Tube2 per-band parameters here (do once per block instead of per-sample)
-overallscale = 1.0; overallscale /= 44100.0; overallscale *= srate;
-
-// low band Tube params
-tubeB_low = (lowDrive / 10.0);
-iterations_low = 1.0 - tubeB_low;
-powerfactor_low = ((9.0 * iterations_low) + 1) | 0;
-asymPad_low = powerfactor_low;
-gainscaling_low = 1.0 / (powerfactor_low + 1);
-outputscaling_low = 1.0 + (1.0 / (powerfactor_low));
-
-// mid band Tube params
-tubeB_mid = (midDrive / 10.0);
-iterations_mid = 1.0 - tubeB_mid;
-powerfactor_mid = ((9.0 * iterations_mid) + 1) | 0;
-asymPad_mid = powerfactor_mid;
-gainscaling_mid = 1.0 / (powerfactor_mid + 1);
-outputscaling_mid = 1.0 + (1.0 / (powerfactor_mid));
-
-// upper-mid band Tube params
-tubeB_upper = (upperDrive / 10.0);
-iterations_upper = 1.0 - tubeB_upper;
-powerfactor_upper = ((9.0 * iterations_upper) + 1) | 0;
-asymPad_upper = powerfactor_upper;
-gainscaling_upper = 1.0 / (powerfactor_upper + 1);
-outputscaling_upper = 1.0 + (1.0 / (powerfactor_upper));
-
-// high band Tube params
-tubeB_high = (highDrive / 10.0);
-iterations_high = 1.0 - tubeB_high;
-powerfactor_high = ((9.0 * iterations_high) + 1) | 0;
-asymPad_high = powerfactor_high;
-gainscaling_high = 1.0 / (powerfactor_high + 1);
-outputscaling_high = 1.0 + (1.0 / (powerfactor_high));
-
-// clamp crossovers (ensure sensible)
-// Keep displayed slider values as-is, but map slider position to a logarithmic frequency response
-// We'll compute log-mapped xover values for DSP while leaving the slider values for display.
 // Define frequency bounds used for mapping
 min_x1 = 20.0; max_x1 = 2000.0;
 min_x2 = 100.0; max_x2 = 20000.0;
 min_x3 = 200.0; max_x3 = 20000.0;
-// read slider frequencies directly (Hz)
-xover1 = slider3;
-xover2 = slider4;
-xover3 = slider5;
+// read slider frequencies directly (Hz) from renumbered sliders
+xover1 = slider4;
+xover2 = slider5;
+xover3 = slider6;
 // clamp to bounds
 (xover1 < min_x1) ? xover1 = min_x1 : (xover1 > max_x1) ? xover1 = max_x1 : xover1;
 (xover2 < min_x2) ? xover2 = min_x2 : (xover2 > max_x2) ? xover2 = max_x2 : xover2;
@@ -165,12 +102,14 @@ minSpacing = 20.0; // Hz
   xover3 = xover2 + minSpacing
 ) : 0;
 // write corrected values back to sliders so they don't cross in the UI/automation
-slider3 = xover1;
-slider4 = xover2;
-slider5 = xover3;
+slider4 = xover1;
+slider5 = xover2;
+slider6 = xover3;
 
 // precompute linear gain
 outGain = pow(10.0, outGainDB * 0.05);
+
+
 
 // map drive sliders (0..10) to dB then to linear gain. 3 dB per slider unit => 0..30 dB at 10
 lowGain = pow(10.0, (lowDrive * 3.0) * 0.05);
@@ -178,12 +117,28 @@ midGain = pow(10.0, (midDrive * 3.0) * 0.05);
 highGain = pow(10.0, (highDrive * 3.0) * 0.05);
 upperGain = pow(10.0, (upperDrive * 3.0) * 0.05);
 
+// precompute per-band asymmetry factors (used by the fast soft-clipper)
+asym_low = lowDrive * 0.02;
+asym_mid = midDrive * 0.02;
+asym_upper = upperDrive * 0.02;
+asym_high = highDrive * 0.02;
+
+// post-saturation per-band gains (dB -> linear)
+postLowGainDB = slider13;
+postLowMidGainDB = slider14;
+postMidUpperGainDB = slider15;
+postHighGainDB = slider16;
+postLowGain = pow(10.0, postLowGainDB * 0.05);
+postLowMidGain = pow(10.0, postLowMidGainDB * 0.05);
+postMidUpperGain = pow(10.0, postMidUpperGainDB * 0.05);
+postHighGain = pow(10.0, postHighGainDB * 0.05);
+
 // precompute lowpass biquad coefficients (RBJ cookbook) for f = xover1 and f = xover2
 // We'll compute coefficients for second-order Butterworth (Q=0.7071) and cascade two identical stages
 // stage coefficients for xover1
 omega = 2.0 * 3.141592653589793 * xover1 / srate;
 sn = sin(omega);
-cs = cos(omega);
+cs = cos(omega); 
 alpha = sn / (2.0 * Q);
 b0_tmp = (1.0 - cs) * 0.5;
 b1_tmp = 1.0 - cs;
@@ -227,18 +182,12 @@ b0_stage = b0_lp1; b1_stage = b1_lp1; b2_stage = b2_lp1; a1_stage = a1_lp1; a2_s
 b0_stage2 = b0_lp2; b1_stage2 = b1_lp2; b2_stage2 = b2_lp2; a1_stage2 = a1_lp2; a2_stage2 = a2_lp2;
 b0_stage3 = b0_lp3; b1_stage3 = b1_lp3; b2_stage3 = b2_lp3; a1_stage3 = a1_lp3; a2_stage3 = a2_lp3;
 
-// (custom gfx UI removed)
 
 @sample
 // store original dry samples for correct bypass/dry mix
 origDryL = spl0;
 origDryR = spl1;
 
-// precompute simple bypass processed signal (passthrough) and bypass flag
-// passthrough should be the original dry signal (no input pad or output gain applied)
-processedBypassL = origDryL;
-processedBypassR = origDryR;
-doBypass = (onOff <= 0.5) ? 1.0 : 0.0;
 
 // use dryL/dryR for the processing chain (they will be scaled by inputPad below)
 dryL = origDryL;
@@ -246,6 +195,7 @@ dryR = origDryR;
 
 // apply input pad
 (inPadTemp = inputPad) < 1.0 ? (dryL *= inPadTemp; dryR *= inPadTemp;) : (dryL *= inPadTemp; dryR *= inPadTemp;);
+
 
 // --------------------------------------------------------------------------------
 // compute LP4 @ xover1 (low band) and LP4 @ xover2 (low+mid combined) by cascading two 2nd-order LPs
@@ -351,222 +301,64 @@ highBandL = dryL - low3L;
 highBandR = dryR - low3R;
 
 // --------------------------------------------------------------------------------
-// per-band saturation processing (branch Tube2 or Simple depending on slider12)
+// per-band saturation processing (simple atan-based saturator)
 // Low band
-doLowProc ? (
-  (useTube >= 0.5) ? (
-    // --- Tube2 path (existing code) ---
-    tubeB = (lowDrive / 10.0);
-    inputSampleL = lowBandL * lowGain;
-    inputSampleR = lowBandR * lowGain;
-    asymPad = asymPad_low; gainscaling = gainscaling_low; outputscaling = outputscaling_low; powerfactor = powerfactor_low;
+// simple atan-based saturator for low band
+inputSampleL = lowBandL * lowGain;
+inputSampleR = lowBandR * lowGain;
+// fast soft-clipper: x / (1 + |x|)
+tmpL = abs(inputSampleL);
+tmpR = abs(inputSampleR);
+inputSampleL = inputSampleL / (1.0 + tmpL);
+inputSampleR = inputSampleR / (1.0 + tmpR);
+// asymmetry (positive-side boost)
+inputSampleL += inputSampleL * asym_low * (inputSampleL > 0.0);
+inputSampleR += inputSampleR * asym_low * (inputSampleR > 0.0);
+lowProcL = inputSampleL; lowProcR = inputSampleR;
 
-    (inputSampleL > 1.0) ? inputSampleL = 1.0;
-    (inputSampleL < -1.0) ? inputSampleL = -1.0;
-    inputSampleL /= asymPad;
-    sharpen = -inputSampleL;
-    (sharpen > 0.0) ? sharpen = 1.0 + sqrt(sharpen) : sharpen = 1.0 - sqrt(-sharpen);
-    inputSampleL -= inputSampleL * abs(inputSampleL) * sharpen * 0.25;
-    inputSampleL *= asymPad;
 
-    factor = inputSampleL; x = 0; while (x < powerfactor) (factor *= inputSampleL; x += 1;);
-    ((powerfactor % 2 == 1) && (inputSampleL != 0.0)) ? factor = (factor / inputSampleL) * abs(inputSampleL);
-    factor *= gainscaling; inputSampleL -= factor; inputSampleL *= outputscaling;
-    (overallscale > 1.9) ? (stored = inputSampleL; inputSampleL += prevLowA_L; prevLowA_L = stored; inputSampleL *= 0.5;) ;
-    slew = prevLowE_L - inputSampleL;
-    (overallscale > 1.9) ? (stored = inputSampleL; inputSampleL += prevLowE_L; prevLowE_L = stored; inputSampleL *= 0.5;) : prevLowE_L = inputSampleL;
-    (slew > 0.0) ? slew = 1.0 + (sqrt(slew) * 0.5) : slew = 1.0 - (sqrt(-slew) * 0.5);
-    inputSampleL -= inputSampleL * abs(inputSampleL) * slew * gainscaling;
-    (inputSampleL > 0.52) ? inputSampleL = 0.52; (inputSampleL < -0.52) ? inputSampleL = -0.52; inputSampleL *= 1.923076923076923;
+//////////////////////////// Mid band
+// simple atan-based saturator for mid band
+inputSampleL = lowMidL * midGain; inputSampleR = lowMidR * midGain;
+tmpL = abs(inputSampleL);
+tmpR = abs(inputSampleR);
+inputSampleL = inputSampleL / (1.0 + tmpL);
+inputSampleR = inputSampleR / (1.0 + tmpR);
+inputSampleL += inputSampleL * asym_mid * (inputSampleL > 0.0);
+inputSampleR += inputSampleR * asym_mid * (inputSampleR > 0.0);
+midProcL = inputSampleL; midProcR = inputSampleR;
 
-    (inputSampleR > 1.0) ? inputSampleR = 1.0;
-    (inputSampleR < -1.0) ? inputSampleR = -1.0;
-    inputSampleR /= asymPad;
-    sharpen = -inputSampleR;
-    (sharpen > 0.0) ? sharpen = 1.0 + sqrt(sharpen) : sharpen = 1.0 - sqrt(-sharpen);
-    inputSampleR -= inputSampleR * abs(inputSampleR) * sharpen * 0.25;
-    inputSampleR *= asymPad;
-    factor = inputSampleR; x = 0; while (x < powerfactor) (factor *= inputSampleR; x += 1;);
-    ((powerfactor % 2 == 1) && (inputSampleR != 0.0)) ? factor = (factor / inputSampleR) * abs(inputSampleR);
-    factor *= gainscaling; inputSampleR -= factor; inputSampleR *= outputscaling;
-    (overallscale > 1.9) ? (stored = inputSampleR; inputSampleR += prevLowA_R; prevLowA_R = stored; inputSampleR *= 0.5;) ;
-    slew = prevLowE_R - inputSampleR;
-    (overallscale > 1.9) ? (stored = inputSampleR; inputSampleR += prevLowE_R; prevLowE_R = stored; inputSampleR *= 0.5;) : prevLowE_R = inputSampleR;
-    (slew > 0.0) ? slew = 1.0 + (sqrt(slew) * 0.5) : slew = 1.0 - (sqrt(-slew) * 0.5);
-    inputSampleR -= inputSampleR * abs(inputSampleR) * slew * gainscaling;
-    (inputSampleR > 0.52) ? inputSampleR = 0.52; (inputSampleR < -0.52) ? inputSampleR = -0.52; inputSampleR *= 1.923076923076923;
 
-    lowProcL = inputSampleL; lowProcR = inputSampleR;
-  ) : (
-    // --- Simple cheap saturator path ---
-    inputSampleL = lowBandL * lowGain;
-    inputSampleR = lowBandR * lowGain;
-    // asymmetric soft clip using atan approximation and slight bias for 'tube' feel
-    biasL = 0.0; biasR = 0.0;
-    (inputSampleL > 0.0) ? (inputSampleL = atan(inputSampleL) * 1.2732395447351638) : (inputSampleL = atan(inputSampleL) * 1.2732395447351638);
-    (inputSampleR > 0.0) ? (inputSampleR = atan(inputSampleR) * 1.2732395447351638) : (inputSampleR = atan(inputSampleR) * 1.2732395447351638);
-    // mild asymmetry: push positives slightly harder when drive is high
-    asym = (lowDrive * 0.02);
-    inputSampleL += inputSampleL * asym * (inputSampleL > 0.0);
-    inputSampleR += inputSampleR * asym * (inputSampleR > 0.0);
-    // simple output scaling to approximate Tube output
-    inputSampleL *= 1.0; inputSampleR *= 1.0;
-    lowProcL = inputSampleL; lowProcR = inputSampleR;
-  )
-) : (
-  lowProcL = lowBandL;
-  lowProcR = lowBandR;
-);
+//////////////////////////// Mid-upper
+// simple atan-based saturator for mid-upper band
+inputSampleL = midUpperL * upperGain; inputSampleR = midUpperR * upperGain;
+tmpL = abs(inputSampleL);
+tmpR = abs(inputSampleR);
+inputSampleL = inputSampleL / (1.0 + tmpL);
+inputSampleR = inputSampleR / (1.0 + tmpR);
+inputSampleL += inputSampleL * asym_upper * (inputSampleL > 0.0);
+inputSampleR += inputSampleR * asym_upper * (inputSampleR > 0.0);
+midUpperProcL = inputSampleL; midUpperProcR = inputSampleR;
 
-//////////////////////////// Mid band -> Tube2 per-band when enabled
-doMidProc ? (
-  (useTube >= 0.5) ? (
-    tubeB = (midDrive / 10.0);
-    inputSampleL = lowMidL * midGain;
-    inputSampleR = lowMidR * midGain;
-    asymPad = asymPad_mid; gainscaling = gainscaling_mid; outputscaling = outputscaling_mid; powerfactor = powerfactor_mid;
+//////////////////////////// High band
+// simple atan-based saturator for high band
+inputSampleL = highBandL * highGain; inputSampleR = highBandR * highGain;
+tmpL = abs(inputSampleL);
+tmpR = abs(inputSampleR);
+inputSampleL = inputSampleL / (1.0 + tmpL);
+inputSampleR = inputSampleR / (1.0 + tmpR);
+inputSampleL += inputSampleL * asym_high * (inputSampleL > 0.0);
+inputSampleR += inputSampleR * asym_high * (inputSampleR > 0.0);
+highProcL = inputSampleL; highProcR = inputSampleR;
 
-    (inputSampleL > 1.0) ? inputSampleL = 1.0; (inputSampleL < -1.0) ? inputSampleL = -1.0;
-    inputSampleL /= asymPad; sharpen = -inputSampleL;
-    (sharpen > 0.0) ? sharpen = 1.0 + sqrt(sharpen) : sharpen = 1.0 - sqrt(-sharpen);
-    inputSampleL -= inputSampleL * abs(inputSampleL) * sharpen * 0.25; inputSampleL *= asymPad;
 
-    factor = inputSampleL; x = 0; while (x < powerfactor) (factor *= inputSampleL; x += 1;);
-    ((powerfactor % 2 == 1) && (inputSampleL != 0.0)) ? factor = (factor / inputSampleL) * abs(inputSampleL);
-    factor *= gainscaling; inputSampleL -= factor; inputSampleL *= outputscaling;
-    (overallscale > 1.9) ? (stored = inputSampleL; inputSampleL += prevLowMidA_L; prevLowMidA_L = stored; inputSampleL *= 0.5;) ;
-    slew = prevLowMidE_L - inputSampleL;
-    (overallscale > 1.9) ? (stored = inputSampleL; inputSampleL += prevLowMidE_L; prevLowMidE_L = stored; inputSampleL *= 0.5;) : prevLowMidE_L = inputSampleL;
-    (slew > 0.0) ? slew = 1.0 + (sqrt(slew) * 0.5) : slew = 1.0 - (sqrt(-slew) * 0.5);
-    inputSampleL -= inputSampleL * abs(inputSampleL) * slew * gainscaling;
-    (inputSampleL > 0.52) ? inputSampleL = 0.52; (inputSampleL < -0.52) ? inputSampleL = -0.52; inputSampleL *= 1.923076923076923;
+// apply post-saturation per-band gains
+lowProcL *= postLowGain; lowProcR *= postLowGain;
+midProcL *= postLowMidGain; midProcR *= postLowMidGain;
+midUpperProcL *= postMidUpperGain; midUpperProcR *= postMidUpperGain;
+highProcL *= postHighGain; highProcR *= postHighGain;
 
-    (inputSampleR > 1.0) ? inputSampleR = 1.0; (inputSampleR < -1.0) ? inputSampleR = -1.0;
-    inputSampleR /= asymPad; sharpen = -inputSampleR;
-    (sharpen > 0.0) ? sharpen = 1.0 + sqrt(sharpen) : sharpen = 1.0 - sqrt(-sharpen);
-    inputSampleR -= inputSampleR * abs(inputSampleR) * sharpen * 0.25; inputSampleR *= asymPad;
-    factor = inputSampleR; x = 0; while (x < powerfactor) (factor *= inputSampleR; x += 1;);
-    ((powerfactor % 2 == 1) && (inputSampleR != 0.0)) ? factor = (factor / inputSampleR) * abs(inputSampleR);
-    factor *= gainscaling; inputSampleR -= factor; inputSampleR *= outputscaling;
-    (overallscale > 1.9) ? (stored = inputSampleR; inputSampleR += prevLowMidA_R; prevLowMidA_R = stored; inputSampleR *= 0.5;) ;
-    slew = prevLowMidE_R - inputSampleR;
-    (overallscale > 1.9) ? (stored = inputSampleR; inputSampleR += prevLowMidE_R; prevLowMidE_R = stored; inputSampleR *= 0.5;) : prevLowMidE_R = inputSampleR;
-    (slew > 0.0) ? slew = 1.0 + (sqrt(slew) * 0.5) : slew = 1.0 - (sqrt(-slew) * 0.5);
-    inputSampleR -= inputSampleR * abs(inputSampleR) * slew * gainscaling;
-    (inputSampleR > 0.52) ? inputSampleR = 0.52; (inputSampleR < -0.52) ? inputSampleR = -0.52; inputSampleR *= 1.923076923076923;
-
-    midProcL = inputSampleL; midProcR = inputSampleR;
-  ) : (
-    // simple saturator path for mid band
-    inputSampleL = lowMidL * midGain; inputSampleR = lowMidR * midGain;
-    inputSampleL = atan(inputSampleL) * 1.2732395447351638; inputSampleR = atan(inputSampleR) * 1.2732395447351638;
-    asym = (midDrive * 0.02);
-    inputSampleL += inputSampleL * asym * (inputSampleL > 0.0);
-    inputSampleR += inputSampleR * asym * (inputSampleR > 0.0);
-    midProcL = inputSampleL; midProcR = inputSampleR;
-  )
-) : (
-  midProcL = lowMidL; midProcR = lowMidR;
-);
-
-//////////////////////////// Mid-upper (new upper-mid) band -> Tube2 per-band when enabled
-doUpperProc ? (
-  (useTube >= 0.5) ? (
-    tubeB = (upperDrive / 10.0);
-    inputSampleL = midUpperL * upperGain; inputSampleR = midUpperR * upperGain;
-    asymPad = asymPad_upper; gainscaling = gainscaling_upper; outputscaling = outputscaling_upper; powerfactor = powerfactor_upper;
-
-    (inputSampleL > 1.0) ? inputSampleL = 1.0; (inputSampleL < -1.0) ? inputSampleL = -1.0;
-    inputSampleL /= asymPad; sharpen = -inputSampleL;
-    (sharpen > 0.0) ? sharpen = 1.0 + sqrt(sharpen) : sharpen = 1.0 - sqrt(-sharpen);
-    inputSampleL -= inputSampleL * abs(inputSampleL) * sharpen * 0.25; inputSampleL *= asymPad;
-    factor = inputSampleL; x = 0; while (x < powerfactor) (factor *= inputSampleL; x += 1;);
-    ((powerfactor % 2 == 1) && (inputSampleL != 0.0)) ? factor = (factor / inputSampleL) * abs(inputSampleL);
-    factor *= gainscaling; inputSampleL -= factor; inputSampleL *= outputscaling;
-    (overallscale > 1.9) ? (stored = inputSampleL; inputSampleL += prevMidUpA_L; prevMidUpA_L = stored; inputSampleL *= 0.5;) ;
-    slew = prevMidUpE_L - inputSampleL;
-    (overallscale > 1.9) ? (stored = inputSampleL; inputSampleL += prevMidUpE_L; prevMidUpE_L = stored; inputSampleL *= 0.5;) : prevMidUpE_L = inputSampleL;
-    (slew > 0.0) ? slew = 1.0 + (sqrt(slew) * 0.5) : slew = 1.0 - (sqrt(-slew) * 0.5);
-    inputSampleL -= inputSampleL * abs(inputSampleL) * slew * gainscaling;
-    (inputSampleL > 0.52) ? inputSampleL = 0.52; (inputSampleL < -0.52) ? inputSampleL = -0.52; inputSampleL *= 1.923076923076923;
-
-    (inputSampleR > 1.0) ? inputSampleR = 1.0; (inputSampleR < -1.0) ? inputSampleR = -1.0;
-    inputSampleR /= asymPad; sharpen = -inputSampleR;
-    (sharpen > 0.0) ? sharpen = 1.0 + sqrt(sharpen) : sharpen = 1.0 - sqrt(-sharpen);
-    inputSampleR -= inputSampleR * abs(inputSampleR) * sharpen * 0.25; inputSampleR *= asymPad;
-    factor = inputSampleR; x = 0; while (x < powerfactor) (factor *= inputSampleR; x += 1;);
-    ((powerfactor % 2 == 1) && (inputSampleR != 0.0)) ? factor = (factor / inputSampleR) * abs(inputSampleR);
-    factor *= gainscaling; inputSampleR -= factor; inputSampleR *= outputscaling;
-    (overallscale > 1.9) ? (stored = inputSampleR; inputSampleR += prevMidUpA_R; prevMidUpA_R = stored; inputSampleR *= 0.5;) ;
-    slew = prevMidUpE_R - inputSampleR;
-    (overallscale > 1.9) ? (stored = inputSampleR; inputSampleR += prevMidUpE_R; prevMidUpE_R = stored; inputSampleR *= 0.5;) : prevMidUpE_R = inputSampleR;
-    (slew > 0.0) ? slew = 1.0 + (sqrt(slew) * 0.5) : slew = 1.0 - (sqrt(-slew) * 0.5);
-    inputSampleR -= inputSampleR * abs(inputSampleR) * slew * gainscaling;
-    (inputSampleR > 0.52) ? inputSampleR = 0.52; (inputSampleR < -0.52) ? inputSampleR = -0.52; inputSampleR *= 1.923076923076923;
-
-    midUpperProcL = inputSampleL; midUpperProcR = inputSampleR;
-  ) : (
-    inputSampleL = midUpperL * upperGain; inputSampleR = midUpperR * upperGain;
-    inputSampleL = atan(inputSampleL) * 1.2732395447351638; inputSampleR = atan(inputSampleR) * 1.2732395447351638;
-    asym = (upperDrive * 0.02);
-    inputSampleL += inputSampleL * asym * (inputSampleL > 0.0);
-    inputSampleR += inputSampleR * asym * (inputSampleR > 0.0);
-    midUpperProcL = inputSampleL; midUpperProcR = inputSampleR;
-  )
-) : (
-  midUpperProcL = midUpperL; midUpperProcR = midUpperR;
-);
-
-//////////////////////////// High band -> Tube2 per-band when enabled
-doHighProc ? (
-  (useTube >= 0.5) ? (
-    tubeB = (highDrive / 10.0);
-    inputSampleL = highBandL * highGain; inputSampleR = highBandR * highGain;
-    asymPad = asymPad_high; gainscaling = gainscaling_high; outputscaling = outputscaling_high; powerfactor = powerfactor_high;
-
-    (inputSampleL > 1.0) ? inputSampleL = 1.0; (inputSampleL < -1.0) ? inputSampleL = -1.0;
-    inputSampleL /= asymPad; sharpen = -inputSampleL;
-    (sharpen > 0.0) ? sharpen = 1.0 + sqrt(sharpen) : sharpen = 1.0 - sqrt(-sharpen);
-    inputSampleL -= inputSampleL * abs(inputSampleL) * sharpen * 0.25; inputSampleL *= asymPad;
-    factor = inputSampleL; x = 0; while (x < powerfactor) (factor *= inputSampleL; x += 1;);
-    ((powerfactor % 2 == 1) && (inputSampleL != 0.0)) ? factor = (factor / inputSampleL) * abs(inputSampleL);
-    factor *= gainscaling; inputSampleL -= factor; inputSampleL *= outputscaling;
-    (overallscale > 1.9) ? (stored = inputSampleL; inputSampleL += prevHighA_L; prevHighA_L = stored; inputSampleL *= 0.5;) ;
-    slew = prevHighE_L - inputSampleL;
-    (overallscale > 1.9) ? (stored = inputSampleL; inputSampleL += prevHighE_L; prevHighE_L = stored; inputSampleL *= 0.5;) : prevHighE_L = inputSampleL;
-    (slew > 0.0) ? slew = 1.0 + (sqrt(slew) * 0.5) : slew = 1.0 - (sqrt(-slew) * 0.5);
-    inputSampleL -= inputSampleL * abs(inputSampleL) * slew * gainscaling;
-    (inputSampleL > 0.52) ? inputSampleL = 0.52; (inputSampleL < -0.52) ? inputSampleL = -0.52; inputSampleL *= 1.923076923076923;
-
-    (inputSampleR > 1.0) ? inputSampleR = 1.0; (inputSampleR < -1.0) ? inputSampleR = -1.0;
-    inputSampleR /= asymPad; sharpen = -inputSampleR;
-    (sharpen > 0.0) ? sharpen = 1.0 + sqrt(sharpen) : sharpen = 1.0 - sqrt(-sharpen);
-    inputSampleR -= inputSampleR * abs(inputSampleR) * sharpen * 0.25; inputSampleR *= asymPad;
-    factor = inputSampleR; x = 0; while (x < powerfactor) (factor *= inputSampleR; x += 1;);
-    ((powerfactor % 2 == 1) && (inputSampleR != 0.0)) ? factor = (factor / inputSampleR) * abs(inputSampleR);
-    factor *= gainscaling; inputSampleR -= factor; inputSampleR *= outputscaling;
-    (overallscale > 1.9) ? (stored = inputSampleR; inputSampleR += prevHighA_R; prevHighA_R = stored; inputSampleR *= 0.5;) ;
-    slew = prevHighE_R - inputSampleR;
-    (overallscale > 1.9) ? (stored = inputSampleR; inputSampleR += prevHighE_R; prevHighE_R = stored; inputSampleR *= 0.5;) : prevHighE_R = inputSampleR;
-    (slew > 0.0) ? slew = 1.0 + (sqrt(slew) * 0.5) : slew = 1.0 - (sqrt(-slew) * 0.5);
-    inputSampleR -= inputSampleR * abs(inputSampleR) * slew * gainscaling;
-    (inputSampleR > 0.52) ? inputSampleR = 0.52; (inputSampleR < -0.52) ? inputSampleR = -0.52; inputSampleR *= 1.923076923076923;
-
-    highProcL = inputSampleL; highProcR = inputSampleR;
-  ) : (
-    inputSampleL = highBandL * highGain; inputSampleR = highBandR * highGain;
-    inputSampleL = atan(inputSampleL) * 1.2732395447351638; inputSampleR = atan(inputSampleR) * 1.2732395447351638;
-    asym = (highDrive * 0.02);
-    inputSampleL += inputSampleL * asym * (inputSampleL > 0.0);
-    inputSampleR += inputSampleR * asym * (inputSampleR > 0.0);
-    highProcL = inputSampleL; highProcR = inputSampleR;
-  )
-) : (
-  highProcL = highBandL; highProcR = highBandR;
-);
-
-// --------------------------------------------------------------------------------
-// sum bands back for 4-band
+// now sum bands back for 4-band
 processedL = lowProcL + midProcL + midUpperProcL + highProcL;
 processedR = lowProcR + midProcR + midUpperProcR + highProcR;
 
@@ -574,9 +366,9 @@ processedR = lowProcR + midProcR + midUpperProcR + highProcR;
 processedL *= outGain;
 processedR *= outGain;
 
-// mix with dry — choose bypass processed vs full processed via arithmetic (avoids 'if')
-finalProcL = doBypass * processedBypassL + (1.0 - doBypass) * processedL;
-finalProcR = doBypass * processedBypassR + (1.0 - doBypass) * processedR;
+// mix with dry — no bypass control, just mix processed and dry per slider2
+finalProcL = processedL;
+finalProcR = processedR;
 
 spl0 = (origDryL * (1.0 - mix)) + (finalProcL * mix);
 spl1 = (origDryR * (1.0 - mix)) + (finalProcR * mix);

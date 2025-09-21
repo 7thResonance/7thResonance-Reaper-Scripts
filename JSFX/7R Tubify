@@ -1,0 +1,7 @@
+--[[
+@desc Tubify
+@author 7thResonance
+@version 1.0
+@provides [effect] JSFX\7R Tubify.jsfx
+@about Simple atan-based Multiband Saturator
+--]]
