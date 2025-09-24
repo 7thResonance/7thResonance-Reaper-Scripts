@@ -1,0 +1,9 @@
+--[[
+@desc 7R Spectrum Analyser
+@author 7thResonance
+@version 1.0
+@provides [effect] JSFX\7R Spectrum Analyser.jsfx
+@about modded version of the cockos spectrum analyser.
+    - Added Sides graph (red)
+    - Main graph is blue
+--]]
