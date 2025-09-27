@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance" commit="fc237a84a27e0c42c29c75618ec592173a093d86">
+<index version="1" name="7thResonance" commit="ec53705ab5da67a8cb20695be2fd2f38c3bb8e59">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -208,6 +208,11 @@
       <version name="2.8" author="7thResonance" time="2025-08-28T11:40:40Z">
         <changelog><![CDATA[- Added more watch folders for changes]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/a5e412503f7a875d5facdb084bdc6a03415e2152/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
+      </version>
+      <version name="2.9" author="7thResonance" time="2025-09-27T17:16:33Z">
+        <changelog><![CDATA[- Some error which didnt come up untill now? I dont understand how this is even possible lmao
+- Removed saving of window sizes. Reaper and imgui does it internally.]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance/raw/ec53705ab5da67a8cb20695be2fd2f38c3bb8e59/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
       </version>
     </reapack>
     <reapack name="7R Insert Instrument (Respecting Folders).lua" type="script" desc="7R Insert Instrument (Respecting Folders)">
