@@ -1,8 +1,9 @@
 --[[
 @description 7R Insert FX Based on Selection under Mouse cursor (Track or Item, Master)
 @author 7thResonance
-@version 2.8
-@changelog - Added more watch folders for changes
+@version 2.9
+@changelog - Some error which didnt come up untill now? I dont understand how this is even possible lmao
+    - Removed saving of window sizes. Reaper and imgui does it internally.
 @donation https://paypal.me/7thresonance
 @about Opens GUI for track, item or master under cursor with GUI to select FX
     - Saves position and size of GUI
@@ -208,17 +209,12 @@ end
 -- Return list of watched files (keys -> full path)
 local function GetWatchedFiles()
     local rp = r.GetResourcePath()
-    -- Explicitly watch both common VST plugin cache files, fxtags (with and without .ini), and clap cache
     return {
-        vst64 = rp .. "/reaper-vstplugins64",
-        vst64_ini = rp .. "/reaper-vstplugins64.ini",
-        vst = rp .. "/reaper-vstplugins",
-        vst_ini = rp .. "/reaper-vstplugins.ini",
-        fxfolders = rp .. "/reaper-fxfolders.ini",
-        clap = rp .. "/reaper-clap-win64",
-        fxtags = rp .. "/reaper-fxtags",
-        fxtags_ini = rp .. "/reaper-fxtags.ini",
-        jsfx = rp .. "/reaper-jsfx.ini",
+        vst = GetVSTPluginsFilePath(),                 -- reaper-vstplugins* (existing)
+        fxfolders = rp .. "/reaper-fxfolders.ini",   -- reaper-fxfolders
+        clap = rp .. "/reaper-clap-win64",          -- reaper-clap-win64
+        fxtags = rp .. "/reaper-fxtags.ini",        -- reaper-fxtags
+        jsfx = rp .. "/reaper-jsfx.ini",            -- reaper-jsfx
     }
 end
 
@@ -809,10 +805,6 @@ settings.auto_close_on_insert = settings.auto_close_on_insert ~= nil and setting
 settings.hide_vst2_duplicates = settings.hide_vst2_duplicates ~= nil and settings.hide_vst2_duplicates or true   -- Hide VST2 if VST3 version exists
 settings.search_all_folders   = settings.search_all_folders   ~= nil and settings.search_all_folders   or false  -- Placeholder for future search behavior
 settings.fx_window_mode       = settings.fx_window_mode       ~= nil and settings.fx_window_mode       or 1      -- 0 = No window, 1 = FX window (float), 2 = Chain window
-settings.window_x             = settings.window_x             ~= nil and settings.window_x             or -1
-settings.window_y             = settings.window_y             ~= nil and settings.window_y             or -1
-settings.window_width         = settings.window_width         ~= nil and settings.window_width         or 800
-settings.window_height        = settings.window_height        ~= nil and settings.window_height        or 600
 settings.last_left_section    = settings.last_left_section    ~= nil and settings.last_left_section    or "all"  -- "all" | "folder" | "dev"
 settings.last_left_value      = settings.last_left_value      ~= nil and settings.last_left_value      or ""     -- Folder name or developer name
 
@@ -832,10 +824,6 @@ local function save_settings()
     f:write("  auto_close_on_insert = " .. tostring(settings.auto_close_on_insert) .. ",\n")
     f:write("  search_all_folders = " .. tostring(settings.search_all_folders) .. ",\n")
     f:write("  fx_window_mode = " .. tostring(settings.fx_window_mode) .. ",\n")
-    f:write("  window_x = " .. tostring(settings.window_x) .. ",\n")
-    f:write("  window_y = " .. tostring(settings.window_y) .. ",\n")
-    f:write("  window_width = " .. tostring(settings.window_width) .. ",\n")
-    f:write("  window_height = " .. tostring(settings.window_height) .. ",\n")
     f:write("  last_left_section = " .. string.format("%q", settings.last_left_section or "all") .. ",\n")
     f:write("  last_left_value = " .. string.format("%q", settings.last_left_value or "") .. "\n")
     f:write("}\n")
@@ -856,27 +844,11 @@ local function load_settings()
     if tbl.auto_close_on_insert ~= nil then settings.auto_close_on_insert = tbl.auto_close_on_insert end
     if tbl.search_all_folders ~= nil then settings.search_all_folders = tbl.search_all_folders end
     if tbl.fx_window_mode ~= nil then settings.fx_window_mode = tbl.fx_window_mode end
-    if tbl.window_x ~= nil then settings.window_x = tbl.window_x end
-    if tbl.window_y ~= nil then settings.window_y = tbl.window_y end
-    if tbl.window_width ~= nil then settings.window_width = tbl.window_width end
-    if tbl.window_height ~= nil then settings.window_height = tbl.window_height end
     if tbl.last_left_section ~= nil then settings.last_left_section = tbl.last_left_section end
     if tbl.last_left_value ~= nil then settings.last_left_value = tbl.last_left_value end
   end
 end
 
-local function save_window_state()
-  local x, y = reaper.ImGui_GetWindowPos(ctx)
-  local w, h = reaper.ImGui_GetWindowSize(ctx)
-  if x and y and w and h then
-    local changed = false
-    if settings.window_x ~= x then settings.window_x = x; changed = true end
-    if settings.window_y ~= y then settings.window_y = y; changed = true end
-    if settings.window_width ~= w then settings.window_width = w; changed = true end
-    if settings.window_height ~= h then settings.window_height = h; changed = true end
-    if changed then save_settings() end
-  end
-end
 
 ------------------------------------------------------
 -- TARGET DETECTION & FX INSERTION
@@ -959,19 +931,12 @@ end
 ------------------------------------------------------
 
 local function draw_main_gui()
-    -- Restore window position and size on first open
-    if settings.window_x >= 0 and settings.window_y >= 0 then
-        reaper.ImGui_SetNextWindowPos(ctx, settings.window_x, settings.window_y, reaper.ImGui_Cond_FirstUseEver())
-    end
-    if settings.window_width > 0 and settings.window_height > 0 then
-        reaper.ImGui_SetNextWindowSize(ctx, settings.window_width, settings.window_height, reaper.ImGui_Cond_FirstUseEver())
-    end
+    -- Window geometry is managed by REAPER/ImGui; do not restore saved sizes here
 
     -- Disable default keyboard navigation; rely on custom keys for the FX list
     local window_flags = reaper.ImGui_WindowFlags_NoNavInputs() | reaper.ImGui_WindowFlags_NoNavFocus()
     local visible, open = reaper.ImGui_Begin(ctx, "7R FX Inserter", true, window_flags)
     if not visible then
-        reaper.ImGui_End(ctx)
         return open
     end
 
@@ -1234,8 +1199,7 @@ local function draw_main_gui()
     reaper.ImGui_Separator(ctx)
     reaper.ImGui_Text(ctx, "Target: " .. target_info)
 
-    -- Persist window position and size changes
-    save_window_state()
+    -- Window geometry persistence removed
 
     reaper.ImGui_End(ctx)
     return open
@@ -1429,10 +1393,3 @@ end
 -- Initialize and start
 init()
 main_loop()
-
--- Cleanup
-reaper.atexit(function()
-    if ctx and reaper.ImGui_DestroyContext then
-        reaper.ImGui_DestroyContext(ctx)
-    end
-end)
