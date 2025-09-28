@@ -1,4 +1,5 @@
-version: 1.0
+version: 1.1
+Author: 7thResonance
 desc:7R Oscilloscope
 
 
@@ -61,8 +62,9 @@ abs(spl1) < threshold ? (
 );
 prev_left = fade_left;
 prev_right = fade_right;
-// Feature 1: Sum L+R for display (does not affect output)
-sum = (spl0 + spl1) * 0.5;
+// Feature 1: Sum L+R for display using faded values (does not affect audio output)
+// Use the fade_* values so the gate/expander actually suppresses tiny residuals in the scope
+sum = (fade_left + fade_right) * 0.5;
 recpos[0]=sum;
 recpos[1]=sum;
 recpos = (recpos+2) >= histsize ? 0 : (recpos+2);
@@ -343,6 +345,3 @@ gfx_line(lx,minr,lx,maxr);
     rdptr >= histsize ? rdptr=0;
   );
 )
-
-
-
