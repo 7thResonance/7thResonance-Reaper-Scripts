@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance" commit="ec53705ab5da67a8cb20695be2fd2f38c3bb8e59">
+<index version="1" name="7thResonance" commit="ab438c6b1647ffa1e8b3277c36b282ee1100a2e9">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -148,7 +148,7 @@
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/b60d7c136710e1bf95568d948940c4a620ce260a/Utilities/7R%20FX%20Send%20Manager.lua</source>
       </version>
     </reapack>
-    <reapack name="7R Insert FX Based on Selection under Mouse (Item, Track and Master).lua" type="script" desc="7R Insert FX Based on Selection under Mouse cursor (Track or Item, Master)">
+    <reapack name="7R Insert FX or Instruments or Track Template Under Mouse cursor (Track or Item, Master).lua" type="script" desc="7R Insert FX/Instruments/Track Template Under Mouse cursor (Track or Item, Master)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -165,54 +165,13 @@
         <link rel="screenshot">https://i.postimg.cc/3JM17J5Q/Screenshot-2025-07-11-062614.png</link>
         <link rel="donation">https://paypal.me/7thresonance</link>
       </metadata>
-      <version name="2.0" author="7thResonance" time="2025-07-10T13:37:27Z">
-        <changelog><![CDATA[- GUI Version!
-- Basic settings
-- GUI for user folders and FX
-- Inserts based on mouse cursor (Track, Item, Master)
-- Supports VST, VST3 and Clap (No AU, LV2 or JS)
-- Cache for quick startup
-- Save and load settings
-- Multiple basic settings for behaviour]]></changelog>
-        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/19a067f38b0f6f7b546ae9678618a10a92d4ce0e/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
-      </version>
-      <version name="2.1" author="7thResonance" time="2025-07-11T00:55:42Z">
-        <changelog><![CDATA[- Shift modifier to add to input FX`
-- hovering on FX chain window adds to track (use global shortcut for non focused hover)]]></changelog>
-        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/04e7200cde053c5e9648b68276efad3c43713dc7/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
-      </version>
-      <version name="2.2" author="7thResonance" time="2025-07-11T09:07:07Z">
-        <changelog><![CDATA[- more efficient FX scanning using API instead of manualy parsing]]></changelog>
-        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/dec42d96947981397d039516f87d0d552ab2d43d/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
-      </version>
-      <version name="2.3" author="7thResonance" time="2025-07-11T09:50:09Z">
-        <changelog><![CDATA[- Text frield is focused for easier searching]]></changelog>
-        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/1bace4e141ab72e0aff4afec2f26cfec1cb42d78/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
-      </version>
-      <version name="2.4" author="7thResonance" time="2025-08-01T17:34:45Z">
-        <changelog><![CDATA[- Allows for arrow keys to highlight FX, Enter to insert FX.]]></changelog>
-        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/7048c7a7df27766c850a8a364a2ef20902d0ff69/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
-      </version>
-      <version name="2.5" author="7thResonance" time="2025-08-08T13:53:49Z">
-        <changelog><![CDATA[- Imgui Update fix]]></changelog>
-        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/60293cec30b39eb0edaeca718f64f612c1b28f8f/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
-      </version>
-      <version name="2.6" author="7thResonance" time="2025-08-19T19:35:25Z">
-        <changelog><![CDATA[- Better Parsing using Sexan's FX Broswer PArser V7]]></changelog>
-        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/27c08a47eaca617c8ec38c6b1773b64130931ef5/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
-      </version>
-      <version name="2.7" author="7thResonance" time="2025-08-27T18:50:11Z">
-        <changelog><![CDATA[- Improved scan update frequency]]></changelog>
-        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/361ac76aa437ef3bf5ac2199f7991552915dbc2c/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
-      </version>
-      <version name="2.8" author="7thResonance" time="2025-08-28T11:40:40Z">
-        <changelog><![CDATA[- Added more watch folders for changes]]></changelog>
-        <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/a5e412503f7a875d5facdb084bdc6a03415e2152/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
-      </version>
-      <version name="2.9" author="7thResonance" time="2025-09-27T17:16:33Z">
-        <changelog><![CDATA[- Some error which didnt come up untill now? I dont understand how this is even possible lmao
-- Removed saving of window sizes. Reaper and imgui does it internally.]]></changelog>
-        <source main="main">https://github.com/7thResonance/7thResonance/raw/ec53705ab5da67a8cb20695be2fd2f38c3bb8e59/Utilities/7R%20Insert%20FX%20Based%20on%20Selection%20under%20Mouse%20(Item,%20Track%20and%20Master).lua</source>
+      <version name="3.0" author="7thResonance" time="2025-09-28T08:34:43Z">
+        <changelog><![CDATA[- Added single pane view (Prefered for docking to the side)
+- Added Track Templates Section
+- Added Instruments Section
+- Option to disable mouse cursor targetting
+- Font size option]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance/raw/ab438c6b1647ffa1e8b3277c36b282ee1100a2e9/Utilities/7R%20Insert%20FX%20or%20Instruments%20or%20Track%20Template%20Under%20Mouse%20cursor%20(Track%20or%20Item,%20Master).lua</source>
       </version>
     </reapack>
     <reapack name="7R Insert Instrument (Respecting Folders).lua" type="script" desc="7R Insert Instrument (Respecting Folders)">
