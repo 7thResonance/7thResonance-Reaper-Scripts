@@ -1,4 +1,4 @@
-version: 1.1
+version: 1.2
 Author: 7thResonance
 desc:7R Oscilloscope
 
@@ -22,6 +22,7 @@ histsize=((srate*2.0*g_maxlen_ms/1000)|0)*2;
 smooth_factor = 1; // Smoothing disabled
 prev_left = 0;
 prev_right = 0;
+last_norm_factor = 1;
 
 
 
@@ -34,6 +35,9 @@ zc_pitch = 0;
 zc_last = 0;
 zc_counter = 0;
 zc_update_interval = 1; // update every block for fastest response
+// helper buffers for autocorrelation (allocated as empty arrays)
+dec_buf = 0;
+Rarr = 0;
 
 // UI defaults: retrig ascending, range auto, length auto
 view_retrig = 2; // ascending
@@ -45,23 +49,20 @@ g_last_wr = time_precise();
 
 
 @sample
-// Fade-out expander logic for smoother silence handling (only affects fade level)
-fade_factor = 0.01; // maximum fade speed (instant fade-out)
-fade_left = prev_left;
-fade_right = prev_right;
-threshold = 0.000001; // -120 dB linear
-abs(spl0) < threshold ? (
-  fade_left = fade_left * fade_factor;
-) : (
-  fade_left = spl0;
-);
-abs(spl1) < threshold ? (
-  fade_right = fade_right * fade_factor;
-) : (
-  fade_right = spl1;
-);
+// No sample cutting: write raw faded values equal to the samples (no hard suppression)
+// Keep prev_* in sync but do not force samples to zero
+fade_left = spl0;
+fade_right = spl1;
 prev_left = fade_left;
 prev_right = fade_right;
+// Optionally disable auto-normalisation when the raw audio is very small (e.g. -90 dB):
+// if the raw channel level is below disable_lin, write the raw sum into the scope buffer
+// and let the waveform shrink naturally; otherwise use the faded/gated values.
+disable_db = -55; // dB threshold below which auto-normalise is disabled
+disable_lin = exp(disable_db*(log(10)/20));
+// compute the raw channel magnitude to decide whether to hold normalization
+raw_max = abs(spl0) > abs(spl1) ? abs(spl0) : abs(spl1);
+disable_norm = raw_max < disable_lin ? 1 : 0;
 // Feature 1: Sum L+R for display using faded values (does not affect audio output)
 // Use the fade_* values so the gate/expander actually suppresses tiny residuals in the scope
 sum = (fade_left + fade_right) * 0.5;
@@ -90,30 +91,40 @@ zc_last >= zc_bufsize ? (
     // Only update period if peak is above threshold
     zc_threshold = 0.001; // -60 dB linear
     peak_zc > zc_threshold ? (
-      // Count zero crossings in buffer
+      // Fractional zero-crossing detection using linear interpolation
+      // small DC removal to reduce bias
+      mean = 0; i = 0;
+      loop(zc_bufsize, mean += zc_buf[i]; i += 1;);
+      mean = mean / zc_bufsize;
+
       crossings = 0;
-      last_sign = zc_buf[0] >= 0 ? 1 : -1;
+      last_sign = (zc_buf[0] - mean) >= 0 ? 1 : -1;
       i = 1;
-      first_cross = -1;
-      last_cross = -1;
+      first_cross_pos = -1;
+      last_cross_pos = -1;
       loop(zc_bufsize-1,
-        s = zc_buf[i] >= 0 ? 1 : -1;
+        prev = zc_buf[i-1] - mean;
+        curr = zc_buf[i] - mean;
+        s = curr >= 0 ? 1 : -1;
         s != last_sign ? (
+          // compute fractional crossing between i-1 and i
+          denom = abs(prev) + abs(curr);
+          frac = denom > 0 ? (abs(prev) / denom) : 0.5;
+          cross_pos = (i-1) + frac;
           crossings += 1;
           last_sign = s;
-          first_cross < 0 ? first_cross = i;
-          last_cross = i;
+          first_cross_pos < 0 ? first_cross_pos = cross_pos;
+          last_cross_pos = cross_pos;
         );
         i += 1;
       );
-      // Estimate period and pitch
-      periods = crossings / 2;
-      (periods >= 1 && last_cross > first_cross) ? (
-        avg_period = (last_cross - first_cross) / periods;
+      // Estimate period and pitch from fractional crossing positions
+      periods = crossings / 2.0;
+      (periods >= 1 && last_cross_pos > first_cross_pos) ? (
+        avg_period = (last_cross_pos - first_cross_pos) / periods;
         zc_period = avg_period;
         zc_pitch = avg_period > 0 ? srate / avg_period : 0;
       );
-      // If not valid, keep previous period
     );
     // If peak is below threshold, do not update zc_period
   );
@@ -127,9 +138,12 @@ gfx_ext_retina>1 ? gfx_setfont(1,"Arial",16*gfx_ext_retina,'b') : gfx_setfont(0)
 gfx_getchar(); // request mouse_cap to be set even when mouse button not down
 
 
-// --- Use zero-crossing period for auto window ---
+
+// --- Use zero-crossing period for auto window (display follows scaled pitch) ---
 zc_period > 0 ? (
-  view_msec = zc_period*1000/srate;
+  // make displayed period consistent with the displayed (reduced) pitch
+  zc_period_display = zc_period / pitch_scale;
+  view_msec = zc_period_display*1000/srate;
 ) : (
   view_msec = 100; // fallback default
 );
@@ -185,6 +199,15 @@ gfx_r=gfx_g=gfx_b=0; gfx_a=1;
 gfx_x=gfx_y=0;
 gfx_rectto(gfx_w,gfx_h);
 
+// Debug overlay: show zero-crossing pitch, peak and crossing count for verification
+gfx_r = 1; gfx_g = 1; gfx_b = 1; gfx_a = 0.9;
+gfx_x = 4; gfx_y = 4;
+// display a reduced pitch value (scaled down by pitch_scale)
+pitch_scale = 0.92; // display = measured * pitch_scale (0.90 = reduce by 10%)
+zc_pitch_display = zc_pitch * pitch_scale;
+sprintf(#, "zc: %.2f Hz  peak: %.6f  cx: %d", zc_pitch_display, peak_zc, crossings);
+gfx_drawstr(#);
+
 scope_h = ((gfx_h-gfx_texth*2-6-4)*0.5)|0;
 scope_ycent = gfx_h - scope_h - gfx_texth - 4;
 
@@ -203,7 +226,21 @@ loop(viewsize_spls,
   (tmp_rdptr+=2) >= histsize ? tmp_rdptr=0;
   i += 1;
 );
-peak > 0 ? norm_factor = 1/peak : norm_factor = 1;
+// Compute normalization factor:
+// - If we have a peak and normalization is allowed, compute norm_factor=1/peak and store it
+// - If normalization is disabled (signal below cutoff), reuse last_norm_factor so the
+//   existing scale is held and the waveform can shrink naturally
+// - If no peak at all, keep last_norm_factor
+peak > 0 ? (
+  disable_norm == 0 ? (
+    norm_factor = 1/peak;
+    last_norm_factor = norm_factor;
+  ) : (
+    norm_factor = last_norm_factor;
+  );
+) : (
+  norm_factor = last_norm_factor;
+);
 
 sc= exp(-view_maxdb*(log(10)/20)) * scope_h * norm_factor;
 
