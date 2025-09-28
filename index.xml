@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance" commit="ab438c6b1647ffa1e8b3277c36b282ee1100a2e9">
+<index version="1" name="7thResonance" commit="0f41544a7ba0fb230bb6aea5da209629a7f41846">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -31,6 +31,9 @@
     <reapack name="7R Oscilloscope.jsfx" type="effect" desc="7R Oscilloscope">
       <version name="1.0" time="2025-09-21T15:31:52Z">
         <source>https://github.com/7thResonance/7thResonance/raw/7b83a721ff8f0d61020dcc124cb4172daa6ba52f/JSFX/7R%20Oscilloscope.jsfx</source>
+      </version>
+      <version name="1.1" author="7thResonance" time="2025-09-28T11:42:10Z">
+        <source>https://github.com/7thResonance/7thResonance/raw/0f41544a7ba0fb230bb6aea5da209629a7f41846/JSFX/7R%20Oscilloscope.jsfx</source>
       </version>
     </reapack>
     <reapack name="7R Spectrum Analyser.jsfx" type="effect" desc="7R Spectrum Analyser">
