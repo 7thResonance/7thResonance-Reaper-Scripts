@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance" commit="70da7e5348de79e7096527417e1c368099d42d63">
+<index version="1" name="7thResonance" commit="067910ad59efeceb9136da2d0c15a12d6f15846b">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -44,7 +44,16 @@
         <source>https://github.com/7thResonance/7thResonance/raw/fc237a84a27e0c42c29c75618ec592173a093d86/JSFX/7R%20Spectrum%20Analyser.jsfx</source>
       </version>
     </reapack>
-    <reapack name="7R Tubify.jsfx" type="effect">
+    <reapack name="7R Tubify.jsfx" type="effect" desc="7R Tubify (Multiband Saturator)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Simple atan-based Multiband Saturator\par}
+}
+]]></description>
+      </metadata>
       <version name="1.0" author="7thResonance" time="2025-09-21T14:43:03Z">
         <source>https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/67407b753ba42d36d656c1da8829b3ebce560fb2/JSFX/7R%20Tubify.jsfx</source>
       </version>
@@ -53,6 +62,10 @@
       </version>
       <version name="1.2" time="2025-09-21T16:08:18Z">
         <source>https://github.com/7thResonance/7thResonance/raw/93c7fd54d6776ba03ec3e5b0212b9140ac77bb0f/JSFX/7R%20Tubify.jsfx</source>
+      </version>
+      <version name="1.3" author="7thResonance" time="2025-09-29T11:47:42Z">
+        <changelog><![CDATA[Added bias, high pass and highpass bypass lol]]></changelog>
+        <source>https://github.com/7thResonance/7thResonance/raw/067910ad59efeceb9136da2d0c15a12d6f15846b/JSFX/7R%20Tubify.jsfx</source>
       </version>
     </reapack>
   </category>
