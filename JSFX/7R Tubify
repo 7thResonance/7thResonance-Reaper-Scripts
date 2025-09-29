@@ -1,7 +1,8 @@
 --[[
 @desc 7R Tubify (Multiband Saturator)
 @author 7thResonance
-@version 1.2
+@version 1.3
 @provides [effect] JSFX\7R Tubify.jsfx
 @about Simple atan-based Multiband Saturator
+@changelog - Added bias, high pass and highpass bypass lol
 --]]
