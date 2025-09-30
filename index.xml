@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance" commit="c09521d1bcfe3c7240c110cb53d4206e031c8302">
+<index version="1" name="7thResonance" commit="0d61dc96b386e7d262934eb92237329e3703f7d4">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -211,10 +211,10 @@
 \widowctrl\hyphauto
 
 {\pard \ql \f0 \sa180 \li0 \fi0 Opens GUI for track, item or master under cursor with GUI to select FX\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Saves position and size of GUI\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Cache for quick search. Updates when new plugins are installed\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Settings for basic options\sa180\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS ReaScript and Imgui\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab Saves position and size of GUI\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab Cache for quick search. Updates when new plugins are installed\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab Settings for basic options\par}
+{\pard \ql \f0 \sa180 \li360 \fi-360 \bullet \tx360\tab Requires JS ReaScript and Imgui\sa180\par}
 }
 ]]></description>
         <link rel="screenshot">https://i.postimg.cc/DyqgzknJ/Screenshot-2025-07-11-062605.png</link>
@@ -228,6 +228,10 @@
 - Option to disable mouse cursor targetting
 - Font size option]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance/raw/ab438c6b1647ffa1e8b3277c36b282ee1100a2e9/Utilities/7R%20Insert%20FX%20or%20Instruments%20or%20Track%20Template%20Under%20Mouse%20cursor%20(Track%20or%20Item,%20Master).lua</source>
+      </version>
+      <version name="3.1" author="7thResonance" time="2025-09-30T12:47:27Z">
+        <changelog><![CDATA[- Filter folder names in track template list]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance/raw/0d61dc96b386e7d262934eb92237329e3703f7d4/Utilities/7R%20Insert%20FX%20or%20Instruments%20or%20Track%20Template%20Under%20Mouse%20cursor%20(Track%20or%20Item,%20Master).lua</source>
       </version>
     </reapack>
     <reapack name="7R Insert Instrument (Respecting Folders).lua" type="script" desc="7R Insert Instrument (Respecting Folders)">
