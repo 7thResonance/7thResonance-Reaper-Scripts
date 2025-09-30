@@ -1,9 +1,8 @@
 --[[
 @description 7R Insert FX/Instruments/Track Template Under Mouse cursor (Track or Item, Master)
 @author 7thResonance
-@version 3.2
-@changelog - Filter folder names in track template list
-    - esc to close script
+@version 3.3
+@changelog - fixed esc not working properly
 @donation https://paypal.me/7thresonance
 @about Opens GUI for track, item or master under cursor with GUI to select FX
     - Saves position and size of GUI
@@ -1698,20 +1697,14 @@ local function draw_main_gui()
         return open
     end
 
-    -- Close the window when Escape is pressed and this ImGui window has focus
+    -- Close the window when Escape is pressed. Do not require ImGui window focus because
+    -- clicking an item can move focus to REAPER and prevent the close otherwise.
     if type(reaper.ImGui_IsKeyPressed) == 'function' and type(reaper.ImGui_Key_Escape) == 'function' then
         local ok, esc = pcall(reaper.ImGui_IsKeyPressed, ctx, reaper.ImGui_Key_Escape())
         if ok and esc then
-            local has_focus = true
-            if type(reaper.ImGui_IsWindowFocused) == 'function' then
-                local fok, fres = pcall(reaper.ImGui_IsWindowFocused, ctx)
-                if fok then has_focus = fres end
-            end
-            if has_focus then
-                window_open = false
-                reaper.ImGui_End(ctx)
-                return false
-            end
+            window_open = false
+            reaper.ImGui_End(ctx)
+            return false
         end
     end
 
