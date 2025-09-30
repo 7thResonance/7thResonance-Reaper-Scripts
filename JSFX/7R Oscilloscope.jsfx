@@ -1,17 +1,14 @@
-version: 1.3
-Author: 7thResonance
 desc:7R Oscilloscope
-
---[[
-@changelog - FFT based pitch detection. a bit better accuracy.
+Author: 7thResonance
+version: 1.4
+changelog: - FFT based pitch detection. a bit better accuracy.
     - reduced the opacity of the filled colour
     - Smoothed the window change.
-@provides [effect] JSFX\7R Oscilloscope.jsfx
-@about modded version of the cockos oscilloscope.
+    - Waveform fade DB adjusted to -60 DB (values below will fade out naturaly without normalising)
+about: modded version of the cockos oscilloscope.
     - only normalised mode
     - clean display for docking to master channel
     - Imperfect period tracking to see waveform shape
---]]
 
 
 in_pin:left input
@@ -87,7 +84,7 @@ prev_right = fade_right;
 // Optionally disable auto-normalisation when the raw audio is very small (e.g. -90 dB):
 // if the raw channel level is below disable_lin, write the raw sum into the scope buffer
 // and let the waveform shrink naturally; otherwise use the faded/gated values.
-disable_db = -55; // dB threshold below which auto-normalise is disabled
+disable_db = -60; // dB threshold below which auto-normalise is disabled
 disable_lin = exp(disable_db*(log(10)/20));
 // compute the raw channel magnitude to decide whether to hold normalization
 raw_max = abs(spl0) > abs(spl1) ? abs(spl0) : abs(spl1);
