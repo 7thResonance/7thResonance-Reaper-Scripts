@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance" commit="ef281c9c052341def2c7029dbd14d2b181fa51ac">
+<index version="1" name="7thResonance" commit="6773239d5c99885f6ea436ac9fe92b9f43a82e5a">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -29,6 +29,18 @@
   </category>
   <category name="JSFX">
     <reapack name="7R Oscilloscope.jsfx" type="effect" desc="7R Oscilloscope">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 modded version of the cockos oscilloscope.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab only normalised mode\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab clean display for docking to master channel\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Imperfect period tracking to see waveform shape\sa180\par}
+}
+]]></description>
+      </metadata>
       <version name="1.0" time="2025-09-21T15:31:52Z">
         <source>https://github.com/7thResonance/7thResonance/raw/7b83a721ff8f0d61020dcc124cb4172daa6ba52f/JSFX/7R%20Oscilloscope.jsfx</source>
       </version>
@@ -40,6 +52,13 @@
       </version>
       <version name="1.3" author="7thResonance" time="2025-09-30T10:07:27Z">
         <source>https://github.com/7thResonance/7thResonance/raw/ef281c9c052341def2c7029dbd14d2b181fa51ac/JSFX/7R%20Oscilloscope.jsfx</source>
+      </version>
+      <version name="1.4" author="7thResonance" time="2025-09-30T11:40:04Z">
+        <changelog><![CDATA[- FFT based pitch detection. a bit better accuracy.
+- reduced the opacity of the filled colour
+- Smoothed the window change.
+- Waveform fade DB adjusted to -60 DB (values below will fade out naturaly without normalising)]]></changelog>
+        <source>https://github.com/7thResonance/7thResonance/raw/6773239d5c99885f6ea436ac9fe92b9f43a82e5a/JSFX/7R%20Oscilloscope.jsfx</source>
       </version>
     </reapack>
     <reapack name="7R Spectrum Analyser.jsfx" type="effect" desc="7R Spectrum Analyser">
