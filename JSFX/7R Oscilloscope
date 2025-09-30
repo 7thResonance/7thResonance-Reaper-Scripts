@@ -1,9 +1,10 @@
 --[[
 @desc 7R Oscilloscope
 @author 7thResonance
-@version 1.2
-@changelog - Optimised the fade out of waveform
-    - Slight pitch offset so that the waveform fits within window. (this is still not accurate, idk how to make it more accurate lmao)
+@version 1.3
+@changelog - FFT based pitch detection. a bit better accuracy.
+    - reduced the opacity of the filled colour
+    - Smoothed the window change.
 @provides [effect] JSFX\7R Oscilloscope.jsfx
 @about modded version of the cockos oscilloscope.
     - only normalised mode

@@ -1,4 +1,4 @@
-version: 1.2
+version: 1.3
 Author: 7thResonance
 desc:7R Oscilloscope
 
@@ -27,17 +27,35 @@ last_norm_factor = 1;
 
 
 
-// Zero-crossing pitch detection parameters (for 40-5000 Hz)
-zc_bufsize = max(2048, (srate/40)|0); // buffer covers down to 40 Hz
-zc_buf = 0;
+// Pitch detection state (FFT-based detector)
 zc_period = 0;
 zc_pitch = 0;
-zc_last = 0;
-zc_counter = 0;
-zc_update_interval = 1; // update every block for fastest response
-// helper buffers for autocorrelation (allocated as empty arrays)
-dec_buf = 0;
-Rarr = 0;
+crossings = 0; // retained for debug compatibility
+
+// smoothing for period display (milliseconds)
+smooth_ms = 100; // target smoothing time ~100 ms
+smoothed_period = 0;
+tau_samples = smooth_ms * 0.001 * srate;
+alpha_sample = 1 - exp(-1.0 / tau_samples);
+
+// Basic FFT-based pitch detection setup (simple max-bin detector)
+// We'll use a fixed FFT size (power of two) and a Hann window.
+// Requested 8096 -> use nearest power-of-two 8192 for FFT implementation
+fft_size = 8192;
+// Ensure fft_size is at least the zc_bufsize for similar resolution
+fft_size < zc_bufsize ? (fft_size = 1 << (floor(log(zc_bufsize)/log(2))+1));
+// prepare buffers in a fixed memory area well after history buffers to avoid collisions
+static_base = histsize*2 + 1024;
+fft_in = static_base; // input buffer (filled in @sample)
+fft_pos = 0; // write position
+fftworkspace = fft_in + fft_size + 16; // workspace area
+window = fftworkspace + fft_size + 16;
+// generate Hann window
+i=0; dwindowpos = $pi*2/fft_size;
+loop(fft_size,
+  window[i] = 0.5 - 0.5 * cos(i * dwindowpos);
+  i += 1;
+);
 
 // UI defaults: retrig ascending, range auto, length auto
 view_retrig = 2; // ascending
@@ -70,64 +88,74 @@ recpos[0]=sum;
 recpos[1]=sum;
 recpos = (recpos+2) >= histsize ? 0 : (recpos+2);
 
+// update smoothed period every sample so smoothing time constant is accurate
+smoothed_period += alpha_sample * (zc_period - smoothed_period);
 
-// --- Zero-crossing pitch detection for full range (40-5000 Hz) ---
-zc_buf[zc_last] = sum;
-zc_last += 1;
 
-zc_last >= zc_bufsize ? (
-  zc_last = 0;
-  zc_counter += 1;
-  zc_counter >= zc_update_interval ? (
-    zc_counter = 0;
-    // Check peak in buffer
-    peak_zc = 0;
-    i = 0;
-    loop(zc_bufsize,
-      absval = abs(zc_buf[i]);
-      absval > peak_zc ? peak_zc = absval;
-      i += 1;
-    );
-    // Only update period if peak is above threshold
-    zc_threshold = 0.001; // -60 dB linear
-    peak_zc > zc_threshold ? (
-      // Fractional zero-crossing detection using linear interpolation
-      // small DC removal to reduce bias
-      mean = 0; i = 0;
-      loop(zc_bufsize, mean += zc_buf[i]; i += 1;);
-      mean = mean / zc_bufsize;
+// --- Basic FFT bin pitch detection (replaces zero-crossing) ---
+// Fill the FFT input buffer with the summed signal; run FFT when full and pick the
+// bin with the largest magnitude within 40..5000 Hz, set zc_pitch to that freq.
+fft_in[fft_pos] = sum;
+fft_pos += 1;
 
-      crossings = 0;
-      last_sign = (zc_buf[0] - mean) >= 0 ? 1 : -1;
-      i = 1;
-      first_cross_pos = -1;
-      last_cross_pos = -1;
-      loop(zc_bufsize-1,
-        prev = zc_buf[i-1] - mean;
-        curr = zc_buf[i] - mean;
-        s = curr >= 0 ? 1 : -1;
-        s != last_sign ? (
-          // compute fractional crossing between i-1 and i
-          denom = abs(prev) + abs(curr);
-          frac = denom > 0 ? (abs(prev) / denom) : 0.5;
-          cross_pos = (i-1) + frac;
-          crossings += 1;
-          last_sign = s;
-          first_cross_pos < 0 ? first_cross_pos = cross_pos;
-          last_cross_pos = cross_pos;
-        );
-        i += 1;
-      );
-      // Estimate period and pitch from fractional crossing positions
-      periods = crossings / 2.0;
-      (periods >= 1 && last_cross_pos > first_cross_pos) ? (
-        avg_period = (last_cross_pos - first_cross_pos) / periods;
-        zc_period = avg_period;
-        zc_pitch = avg_period > 0 ? srate / avg_period : 0;
-      );
-    );
-    // If peak is below threshold, do not update zc_period
+fft_pos >= fft_size ? (
+  fft_pos = 0;
+  // apply window and copy to workspace
+  i = 0; buf = fftworkspace;
+  loop(fft_size,
+    buf[] = fft_in[i] * window[i];
+    i += 1; buf += 1;
   );
+
+  // perform real FFT
+  fft_real(fftworkspace, fft_size);
+  fft_permute(fftworkspace, fft_size/2);
+
+  // find max magnitude bin in desired range (minFreq..Nyquist)
+  minFreq = 40;
+  minBin = floor(minFreq * fft_size / srate);
+  // scan up to Nyquist (half FFT)
+  maxBin = (fft_size/2 - 1);
+  bestBin = minBin;
+  bestMag = 0;
+  buf = fftworkspace + 0;
+  // bin 0 is DC (real at buf[0]), bin k complex is (buf[2*k], buf[2*k+1])
+  // iterate bins using loop to avoid parser issues with while constructs
+  binCount = maxBin - minBin + 1;
+  i = 0;
+  loop(binCount,
+    idx = minBin + i;
+    real = fftworkspace[2*idx];
+    imag = fftworkspace[2*idx+1];
+    mag = sqr(real) + sqr(imag);
+    mag > bestMag ? ( bestMag = mag; bestBin = idx; );
+    i += 1;
+  );
+
+  // parabolic interpolation around the best bin for sub-bin accuracy
+  // only interpolate if bestBin is not at the search edges
+  bestBin > minBin && bestBin < maxBin ? (
+    // magnitudes (power) at bins b-1, b, b+1
+    r1 = fftworkspace[2*(bestBin-1)]; i1 = fftworkspace[2*(bestBin-1)+1]; m1 = sqr(r1) + sqr(i1);
+    r2 = fftworkspace[2*bestBin];     i2 = fftworkspace[2*bestBin+1];     m2 = sqr(r2) + sqr(i2);
+    r3 = fftworkspace[2*(bestBin+1)]; i3 = fftworkspace[2*(bestBin+1)+1]; m3 = sqr(r3) + sqr(i3);
+    denom = (m1 - 2*m2 + m3);
+    denom == 0 ? ( delta = 0 ) : ( delta = 0.5 * (m1 - m3) / denom );
+    refinedBin = bestBin + delta;
+    zc_pitch = refinedBin * srate / fft_size;
+    zc_period = zc_pitch > 0 ? srate / zc_pitch : 0;
+  ) : (
+    bestBin > 0 ? (
+      zc_pitch = bestBin * srate / fft_size;
+      zc_period = zc_pitch > 0 ? srate / zc_pitch : 0;
+    ) : (
+      zc_pitch = 0;
+      zc_period = 0;
+    )
+  );
+  // keep a small indicator of peak size for debug similar to old code
+  peak_zc = sqrt(bestMag);
+  crossings = 0; // not used in FFT method, keep defined for debug string
 );
 
 
@@ -139,11 +167,9 @@ gfx_getchar(); // request mouse_cap to be set even when mouse button not down
 
 
 
-// --- Use zero-crossing period for auto window (display follows scaled pitch) ---
-zc_period > 0 ? (
-  // make displayed period consistent with the displayed (reduced) pitch
-  zc_period_display = zc_period / pitch_scale;
-  view_msec = zc_period_display*1000/srate;
+// --- Use detected period for auto window (display follows detected pitch) ---
+smoothed_period > 0 ? (
+  view_msec = smoothed_period*1000/srate;
 ) : (
   view_msec = 100; // fallback default
 );
@@ -202,10 +228,8 @@ gfx_rectto(gfx_w,gfx_h);
 // Debug overlay: show zero-crossing pitch, peak and crossing count for verification
 gfx_r = 1; gfx_g = 1; gfx_b = 1; gfx_a = 0.9;
 gfx_x = 4; gfx_y = 4;
-// display a reduced pitch value (scaled down by pitch_scale)
-pitch_scale = 0.92; // display = measured * pitch_scale (0.90 = reduce by 10%)
-zc_pitch_display = zc_pitch * pitch_scale;
-sprintf(#, "zc: %.2f Hz  peak: %.6f  cx: %d", zc_pitch_display, peak_zc, crossings);
+// display detected pitch directly
+sprintf(#, "fft: %.2f Hz  peak: %.6f", zc_pitch, peak_zc);
 gfx_drawstr(#);
 
 scope_h = ((gfx_h-gfx_texth*2-6-4)*0.5)|0;
@@ -284,7 +308,7 @@ viewadv < 1 ? (
       minr = min(max(-1,(scope_ycent+0.5-minr*sc)|0),gfx_h+2);
       maxr = min(max(-1,(scope_ycent+0.5-maxr*sc)|0),gfx_h+2);
       
-      gfx_a=0.25;
+  gfx_a=0.10;
       color1();
       maxl-1 > scope_ycent ? gfx_line(lx,maxl-1,lx,scope_ycent) : 
       minl+1 < scope_ycent ? gfx_line(lx,minl+1,lx,scope_ycent);
@@ -315,7 +339,7 @@ viewadv < 1 ? (
   minr = min(max(-1,(scope_ycent+0.5-minr*sc)|0),gfx_h+2);
   maxr = min(max(-1,(scope_ycent+0.5-maxr*sc)|0),gfx_h+2);
   color1();
-  gfx_a=0.35;
+  gfx_a=0.10;
   maxl-1 > scope_ycent ? gfx_line(lx,maxl-1,lx,scope_ycent) : 
   minl+1 < scope_ycent ? gfx_line(lx,minl+1,lx,scope_ycent);
 
@@ -343,7 +367,7 @@ gfx_line(lx,minr,lx,maxr);
       loop(2,
         v = (rdptr[0] * sc)|0;
         
-        gfx_a=.25;
+  gfx_a=0.10;
         v < 0 ? (
           v < -maxval ? v=-maxval;
           gfx_rect(x1,scope_ycent,x2-x1,-v)
@@ -362,7 +386,7 @@ gfx_line(lx,minr,lx,maxr);
       color1();
       
       loop(2,
-        gfx_a=(i&1) ? 0.25:0.125;
+  gfx_a=0.10;
         v = (rdptr[0] * sc)|0;
         v < 0 ? (
           v < -maxval ? v=-maxval;
