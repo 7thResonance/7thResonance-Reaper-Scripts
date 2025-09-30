@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance" commit="0d61dc96b386e7d262934eb92237329e3703f7d4">
+<index version="1" name="7thResonance" commit="02fe119bde44ad60dbac96f68a8c3c1c02c4a540">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -232,6 +232,11 @@
       <version name="3.1" author="7thResonance" time="2025-09-30T12:47:27Z">
         <changelog><![CDATA[- Filter folder names in track template list]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance/raw/0d61dc96b386e7d262934eb92237329e3703f7d4/Utilities/7R%20Insert%20FX%20or%20Instruments%20or%20Track%20Template%20Under%20Mouse%20cursor%20(Track%20or%20Item,%20Master).lua</source>
+      </version>
+      <version name="3.2" author="7thResonance" time="2025-09-30T12:55:03Z">
+        <changelog><![CDATA[- Filter folder names in track template list
+- esc to close script]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance/raw/02fe119bde44ad60dbac96f68a8c3c1c02c4a540/Utilities/7R%20Insert%20FX%20or%20Instruments%20or%20Track%20Template%20Under%20Mouse%20cursor%20(Track%20or%20Item,%20Master).lua</source>
       </version>
     </reapack>
     <reapack name="7R Insert Instrument (Respecting Folders).lua" type="script" desc="7R Insert Instrument (Respecting Folders)">
