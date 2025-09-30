@@ -1,19 +1,15 @@
 --[[
 @description 7R Insert FX/Instruments/Track Template Under Mouse cursor (Track or Item, Master)
 @author 7thResonance
-@version 3.0
-@changelog - Added single pane view (Prefered for docking to the side)
-           - Added Track Templates Section
-           - Added Instruments Section
-           - Option to disable mouse cursor targetting
-           - Font size option
+@version 3.1
+@changelog - Filter folder names in track template list
 @donation https://paypal.me/7thresonance
 @about Opens GUI for track, item or master under cursor with GUI to select FX
     - Saves position and size of GUI
     - Cache for quick search. Updates when new plugins are installed
     - Settings for basic options
 
-    Requires JS ReaScript and Imgui
+    - Requires JS ReaScript and Imgui
 @screenshot https://i.postimg.cc/DyqgzknJ/Screenshot-2025-07-11-062605.png
     https://i.postimg.cc/3JM17J5Q/Screenshot-2025-07-11-062614.png
 
@@ -1488,7 +1484,11 @@ local function draw_main_gui_tree_contents()
                         if vst3_basenames[base] then skip = true end
                     end
                     if not skip then
-                        local label = fx_name:gsub("^%s*[%w_]+%s*:%s*", "")
+                        -- Use only the basename for display so folder prefixes do not appear in search results
+                        local basename = fx_name:match("([^/\\]+)$") or fx_name
+                        local label = basename:gsub("^%s*[%w_]+%s*:%s*", "")
+                        -- Remove known file-type suffixes for cleaner labels
+                        label = label:gsub("%.RfxChain$", ""):gsub("%.RTrackTemplate$", "")
                         if label:lower():find(search_lower, 1, true) or fx_name:lower():find(search_lower, 1, true) then
                             rows[#rows+1] = { label = label, original = fx_name }
                         end
@@ -1586,12 +1586,13 @@ local function draw_main_gui_tree_contents()
                                                                                                 render_fx_list(fx.fx or {}, depth + 1)
                                                                                                 reaper.ImGui_TreePop(ctx)
                                                                                             end
-                                                            elseif type(fx) == "string" then
-                                                                local display = fx:gsub("^%s*[%w_]+%s*:%s*", "")
-                                                                display = display:gsub("%.RfxChain$", "")
-                                                                display = display:gsub("%.RTrackTemplate$", "")
-                                                                local id = display .. "##" .. fx .. tostring(idx)
-                                                                local clicked = reaper.ImGui_Selectable(ctx, id, false)
+                                    elseif type(fx) == "string" then
+                                    -- Use only the basename (strip any folder path) so tree shows just the file name
+                                    local basename = fx:match("([^/\\]+)$") or fx
+                                    local display = basename:gsub("^%s*[%w_]+%s*:%s*", "")
+                                    display = display:gsub("%.RfxChain$", ""):gsub("%.RTrackTemplate$", "")
+                                    local id = display .. "##" .. fx .. tostring(idx)
+                                    local clicked = reaper.ImGui_Selectable(ctx, id, false)
 
                                                                 if reaper.ImGui_IsItemActive(ctx) and reaper.ImGui_IsMouseDragging(ctx, reaper.ImGui_MouseButton_Left()) and not dragging then
                                                                     dragging = true
@@ -1636,9 +1637,10 @@ local function draw_main_gui_tree_contents()
                                                             reaper.ImGui_TreePop(ctx)
                                                         end
                                                     elseif type(fx) == "string" then
-                                                        local display = fx:gsub("^%s*[%w_]+%s*:%s*", "")
-                                                        display = display:gsub("%.RfxChain$", "")
-                                                        display = display:gsub("%.RTrackTemplate$", "")
+                                                        -- Show only the filename (basename) for file entries so folder nodes don't prefix the name
+                                                        local basename = fx:match("([^/\\]+)$") or fx
+                                                        local display = basename:gsub("^%s*[%w_]+%s*:%s*", "")
+                                                        display = display:gsub("%.RfxChain$", ""):gsub("%.RTrackTemplate$", "")
                                                         local id = display .. "##" .. fx .. tostring(idx)
                                                         local clicked = reaper.ImGui_Selectable(ctx, id, false)
 
