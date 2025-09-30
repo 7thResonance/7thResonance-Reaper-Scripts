@@ -1,5 +1,10 @@
-version: 1.0
 desc:7R Spectrum Analyser
+Author: 7thResonance
+version: 1.1
+about: modded version of the cockos spectrum analyser.
+    - Added Sides graph (red)
+    - Main graph is blue
+changelog: Organised Data
 
 //tags: analysis FFT meter spectrum
 //author: Cockos
