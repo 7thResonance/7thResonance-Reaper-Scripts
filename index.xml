@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance" commit="1594458508a5da097e5eba196cc60c7695586ff4">
+<index version="1" name="7thResonance" commit="932bf00f4a5de8ac80b57a4d4c39910c62950ab8">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -423,6 +423,10 @@ Doesnt create send if folder.]]></changelog>
       <version name="1.8" author="7thResonance" time="2025-07-12T17:02:52Z">
         <changelog><![CDATA[- added media item changes for detection]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/82beca691b1c9ae8b42f83bc898af6907cb40e52/Utilities/7R%20MIDI%20AutoSend.lua</source>
+      </version>
+      <version name="1.9" author="7thResonance" time="2025-10-20T17:45:57Z">
+        <changelog><![CDATA[- Sends are now pre FX to ignore midi merge setting on some VSTis]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance/raw/932bf00f4a5de8ac80b57a4d4c39910c62950ab8/Utilities/7R%20MIDI%20AutoSend.lua</source>
       </version>
     </reapack>
     <reapack name="7R Project Browser.lua" type="script" desc="7R Project Browser">
