@@ -1,8 +1,8 @@
 --[[
 @description 7R MIDI Auto Send for CC Feedback
 @author 7thResonance
-@version 1.8
-@changelog - added media item changes for detection
+@version 1.9
+@changelog - Sends are now pre FX to ignore midi merge setting on some VSTis
 @link Youtube Video https://www.youtube.com/watch?v=u1325Y-tJZQ
 @donation https://paypal.me/7thresonance
 @about MIDI Auto Send from selected track to Specific track
@@ -61,6 +61,7 @@ function setupMIDISend(selectedTrack, feedbackTrack)
       reaper.SetTrackSendInfo_Value(selectedTrack, 0, sendIdx, "I_SRCCHAN", -1) -- All MIDI channels
       reaper.SetTrackSendInfo_Value(selectedTrack, 0, sendIdx, "I_DSTCHAN", 0)  -- Destination to channel 1
       reaper.SetTrackSendInfo_Value(selectedTrack, 0, sendIdx, "I_MIDIFLAGS", 1) -- MIDI only
+      reaper.SetTrackSendInfo_Value(selectedTrack, 0, sendIdx, "I_SENDMODE", 1)
     end
 end
 
