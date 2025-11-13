@@ -36,3 +36,5 @@ Control Sends of Selected Track - Allows controlling send volume of many tracks 
 Adds [Frozen] to Frozen Track's Name - Add ' [Frozen] to Frozen tracks, removes it when thawed
 
 Marker Exporter - GUI to export Project/Take Markers and Regions.
+
+FX Link - Links selected Track's Focused FX (relative)
