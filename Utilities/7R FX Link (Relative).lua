@@ -1,14 +1,14 @@
 --[[
 @description 7R FX Link (Relative)
 @author 7thResonance
-@version 1.0
-@changelog - Initial
+@version 1.01
+@changelog - Added bypass and offline state synchronization.
 @donation https://paypal.me/7thresonance
 @about Links the same FX on selected track.
 
 Original script by zaibuyidao.
 Any changes to the FX parameters on one track will be reflected on all other selected tracks with the same FX (all of them).
-
+Also syncs bypass and offline states of the FX.
 Uses FX focus as the starting point. If you have multiple FX windows open
 wait a short time (maybe 50 to 100ms) before adjusting parameter. 
 (limitation of how reaper defer cycles work, or my lack of ideas lmao)
@@ -32,6 +32,9 @@ focused_fx = {
 
 -- 參數快照，保存當前focused FX所有參數的值
 param_snapshot = {}
+
+-- 追蹤所有選中item/track上FX的bypass和offline狀態
+fx_state_snapshot = {}
 
 function create_param_snapshot()
   param_snapshot = {}
@@ -148,6 +151,214 @@ function sync_item_fx_param(param_idx, delta)
   end
 end
 
+function create_fx_state_snapshot()
+  fx_state_snapshot = {}
+  
+  -- 掃描所有選中item的FX狀態
+  local items_count = reaper.CountSelectedMediaItems(0)
+  for i = 0, items_count - 1 do
+    local item = reaper.GetSelectedMediaItem(0, i)
+    local take = reaper.GetActiveTake(item)
+    if take then
+      local fx_count = reaper.TakeFX_GetCount(take)
+      for fx_idx = 0, fx_count - 1 do
+        local _, fx_name = reaper.TakeFX_GetFXName(take, fx_idx, '')
+        local bypass = reaper.TakeFX_GetEnabled(take, fx_idx)
+        local offline = reaper.TakeFX_GetOffline(take, fx_idx)
+        local key = "item_" .. i .. "_" .. fx_idx
+        fx_state_snapshot[key] = {
+          type = "item",
+          item_idx = i,
+          fx_idx = fx_idx,
+          fx_name = fx_name,
+          bypass = bypass,
+          offline = offline
+        }
+      end
+    end
+  end
+  
+  -- 掃描所有選中track的FX狀態
+  local tracks = {}
+  for i = 0, reaper.CountSelectedTracks(0) - 1 do
+    table.insert(tracks, reaper.GetSelectedTrack(0, i))
+  end
+  if reaper.IsTrackSelected(reaper.GetMasterTrack(0)) then
+    table.insert(tracks, reaper.GetMasterTrack(0))
+  end
+  
+  for track_seq, track in pairs(tracks) do
+    local fx_count = reaper.TrackFX_GetCount(track)
+    for fx_idx = 0, fx_count - 1 do
+      local _, fx_name = reaper.TrackFX_GetFXName(track, fx_idx, "")
+      local bypass = reaper.TrackFX_GetEnabled(track, fx_idx)
+      local offline = reaper.TrackFX_GetOffline(track, fx_idx)
+      local key = "track_" .. track_seq .. "_" .. fx_idx
+      fx_state_snapshot[key] = {
+        type = "track",
+        track_seq = track_seq,
+        fx_idx = fx_idx,
+        fx_name = fx_name,
+        bypass = bypass,
+        offline = offline
+      }
+    end
+  end
+end
+
+function sync_fx_states()
+  -- 重新掃描FX狀態並比較
+  local items_count = reaper.CountSelectedMediaItems(0)
+  
+  -- 檢查item FX狀態變化和刪除
+  local current_item_fx = {}
+  local current_selected_items = {}
+  for i = 0, items_count - 1 do
+    local item = reaper.GetSelectedMediaItem(0, i)
+    current_selected_items[reaper.GetMediaItemID(item)] = true
+    local take = reaper.GetActiveTake(item)
+    if take then
+      local fx_count = reaper.TakeFX_GetCount(take)
+      for fx_idx = 0, fx_count - 1 do
+        local _, fx_name = reaper.TakeFX_GetFXName(take, fx_idx, '')
+        local bypass = reaper.TakeFX_GetEnabled(take, fx_idx)
+        local offline = reaper.TakeFX_GetOffline(take, fx_idx)
+        local key = "item_" .. i .. "_" .. fx_idx
+        current_item_fx[key] = true
+        
+        local old_state = fx_state_snapshot[key]
+        if old_state then
+          if old_state.bypass ~= bypass or old_state.offline ~= offline then
+            -- 狀態改變，同步到其他選中item上同名的FX
+            propagate_fx_state(fx_name, "item", bypass, offline)
+          end
+        end
+      end
+    end
+  end
+  
+
+  
+  -- 檢查track FX狀態變化和刪除
+  local tracks = {}
+  local current_selected_tracks = {}
+  for i = 0, reaper.CountSelectedTracks(0) - 1 do
+    local track = reaper.GetSelectedTrack(0, i)
+    table.insert(tracks, track)
+    current_selected_tracks[reaper.GetTrackGUID(track)] = i
+  end
+  if reaper.IsTrackSelected(reaper.GetMasterTrack(0)) then
+    local master = reaper.GetMasterTrack(0)
+    table.insert(tracks, master)
+    current_selected_tracks[reaper.GetTrackGUID(master)] = #tracks
+  end
+  
+  local current_track_fx = {}
+  for track_seq, track in pairs(tracks) do
+    local fx_count = reaper.TrackFX_GetCount(track)
+    for fx_idx = 0, fx_count - 1 do
+      local _, fx_name = reaper.TrackFX_GetFXName(track, fx_idx, "")
+      local bypass = reaper.TrackFX_GetEnabled(track, fx_idx)
+      local offline = reaper.TrackFX_GetOffline(track, fx_idx)
+      local key = "track_" .. track_seq .. "_" .. fx_idx
+      current_track_fx[key] = true
+      
+      local old_state = fx_state_snapshot[key]
+      if old_state then
+        if old_state.bypass ~= bypass or old_state.offline ~= offline then
+          -- 狀態改變，同步到其他選中track上同名的FX
+          propagate_fx_state(fx_name, "track", bypass, offline)
+        end
+      end
+    end
+  end
+  
+
+  
+  -- 更新快照
+  create_fx_state_snapshot()
+end
+
+function propagate_fx_deletion(fx_name, fx_type)
+  if fx_type == "item" then
+    local items_count = reaper.CountSelectedMediaItems(0)
+    for i = 0, items_count - 1 do
+      local item = reaper.GetSelectedMediaItem(0, i)
+      local take = reaper.GetActiveTake(item)
+      if take then
+        local fx_count = reaper.TakeFX_GetCount(take)
+        for fx_idx = fx_count - 1, 0, -1 do
+          local _, current_fx_name = reaper.TakeFX_GetFXName(take, fx_idx, '')
+          if current_fx_name == fx_name then
+            reaper.TakeFX_Delete(take, fx_idx)
+            if only_first then break end
+          end
+        end
+      end
+    end
+  else
+    local tracks = {}
+    for i = 0, reaper.CountSelectedTracks(0) - 1 do
+      table.insert(tracks, reaper.GetSelectedTrack(0, i))
+    end
+    if reaper.IsTrackSelected(reaper.GetMasterTrack(0)) then
+      table.insert(tracks, reaper.GetMasterTrack(0))
+    end
+    
+    for _, track in pairs(tracks) do
+      local fx_count = reaper.TrackFX_GetCount(track)
+      for fx_idx = fx_count - 1, 0, -1 do
+        local _, current_fx_name = reaper.TrackFX_GetFXName(track, fx_idx, "")
+        if current_fx_name == fx_name then
+          reaper.TrackFX_Delete(track, fx_idx)
+          if only_first then break end
+        end
+      end
+    end
+  end
+end
+
+function propagate_fx_state(fx_name, fx_type, bypass, offline)
+  if fx_type == "item" then
+    local items_count = reaper.CountSelectedMediaItems(0)
+    for i = 0, items_count - 1 do
+      local item = reaper.GetSelectedMediaItem(0, i)
+      local take = reaper.GetActiveTake(item)
+      if take then
+        local fx_count = reaper.TakeFX_GetCount(take)
+        for fx_idx = 0, fx_count - 1 do
+          local _, current_fx_name = reaper.TakeFX_GetFXName(take, fx_idx, '')
+          if current_fx_name == fx_name then
+            reaper.TakeFX_SetEnabled(take, fx_idx, bypass)
+            reaper.TakeFX_SetOffline(take, fx_idx, offline)
+            if only_first then break end
+          end
+        end
+      end
+    end
+  else
+    local tracks = {}
+    for i = 0, reaper.CountSelectedTracks(0) - 1 do
+      table.insert(tracks, reaper.GetSelectedTrack(0, i))
+    end
+    if reaper.IsTrackSelected(reaper.GetMasterTrack(0)) then
+      table.insert(tracks, reaper.GetMasterTrack(0))
+    end
+    
+    for _, track in pairs(tracks) do
+      local fx_count = reaper.TrackFX_GetCount(track)
+      for fx_idx = 0, fx_count - 1 do
+        local _, current_fx_name = reaper.TrackFX_GetFXName(track, fx_idx, "")
+        if current_fx_name == fx_name then
+          reaper.TrackFX_SetEnabled(track, fx_idx, bypass)
+          reaper.TrackFX_SetOffline(track, fx_idx, offline)
+          if only_first then break end
+        end
+      end
+    end
+  end
+end
+
 function sync_track_fx_param(param_idx, delta)
   local source_track = focused_fx.track_idx == -1 and reaper.GetMasterTrack(0) or reaper.GetTrack(0, focused_fx.track_idx)
   
@@ -185,6 +396,11 @@ end
 
 function main()
   reaper.PreventUIRefresh(1)
+  
+  -- 第一次執行時初始化FX狀態快照
+  if next(fx_state_snapshot) == nil and (reaper.CountSelectedMediaItems(0) > 0 or reaper.CountSelectedTracks(0) > 0) then
+    create_fx_state_snapshot()
+  end
   
   -- 查詢當前focused FX
   local retval, track_idx, item_idx, take_idx, fx_idx, parm_idx = reaper.GetTouchedOrFocusedFX(1)
@@ -231,6 +447,9 @@ function main()
     focused_fx.fx_name = nil
     param_snapshot = {}
   end
+  
+  -- 檢查並同步FX狀態變化（bypass/offline）
+  sync_fx_states()
   
   -- 如果有focused FX，更新並同步參數
   if focused_fx.track_idx ~= nil then
