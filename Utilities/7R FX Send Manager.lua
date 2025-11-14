@@ -1,8 +1,8 @@
 --[[
 @description 7R FX Send Manager
 @author 7thResonance
-@version 1.0
-@changelog - Initial
+@version 1.1
+@changelog - Added pause to work with other background send scripts
 @donation https://paypal.me/7thresonance
 @about Opens GUI to mark tracks to be a FX send target
     - Autoloads marked tracks on new projects
@@ -238,6 +238,7 @@ end
 
 -- Init
 load_fx()
+reaper.SetExtState("7R_SendScripts", "manager_running", "true", true)
 
 -- Main loop
 local function main()
@@ -260,7 +261,7 @@ local function main()
     reaper.ImGui_Separator(ctx)
     draw_list()
 
-            -- sends
+    -- sends
     reaper.ImGui_Text(ctx, 'Sends:')
     local sel = get_selected(); update_order()
     for _, g in ipairs(FX_ORDER) do
@@ -299,19 +300,18 @@ local function main()
             end
           end
         end
-
-        
-        
-        end
-
-        
-
+      end
     end
 
     reaper.ImGui_End(ctx)
   end
   if open_main then
     reaper.defer(main)
+  else
+    -- Clear the flag when window is closed
+    reaper.SetExtState("7R_SendScripts", "manager_running", "false", true)
   end
-    end
-  reaper.defer(main)
+end
+
+reaper.defer(main)
+

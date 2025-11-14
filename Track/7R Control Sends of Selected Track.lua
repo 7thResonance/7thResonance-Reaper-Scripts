@@ -1,9 +1,10 @@
 --[[
 @description 7R Control Send volume of Selected Track
 @author 7thResonance
-@version 1.1
+@version 1.2
 @donation https://paypal.me/7thresonance
-@changelog consoldidated undo points
+@changelog added pause to work with the GUI send manager script
+    - Added send pan control syncing
 @about When mulltiple tracks are selected, can change the relative volume of the send over those tracks.
 
     due to my lack of knowledge, or limitation of API (i wouldnt know lmao) 
@@ -42,7 +43,7 @@ function HasSendWithName(track, target_send_name)
     return false, -1
 end
 
--- Function to store send volumes for selected tracks (in dB)
+-- Function to store send volumes and pan for selected tracks (in dB)
 function StoreSendVolumes()
     local track_sends = {}
     local sel_track_count = reaper.CountSelectedTracks(0)
@@ -52,7 +53,11 @@ function StoreSendVolumes()
         local send_count = reaper.GetTrackNumSends(track, 0)
         for j = 0, send_count - 1 do
             local send_name, vol = GetSendInfo(track, j)
-            track_sends[track][send_name] = LinearToDB(vol)
+            local pan = reaper.GetTrackSendInfo_Value(track, 0, j, "D_PAN")
+            track_sends[track][send_name] = {
+                vol = LinearToDB(vol),
+                pan = pan
+            }
         end
     end
     return track_sends
@@ -60,34 +65,41 @@ end
 
 -- Main function
 function Main()
-    local track_sends = StoreSendVolumes()
-    local last_sel_count = reaper.CountSelectedTracks(0)
-    local alt_latched = false
-    local mouse_was_down = false
-    local changes_during_drag = {}
+     local track_sends = StoreSendVolumes()
+     local last_sel_count = reaper.CountSelectedTracks(0)
+     local alt_latched = false
+     local mouse_was_down = false
+     local changes_during_drag = {}
 
-    local function GetAltAndMouseState()
-        local alt_held = false
-        local mouse_down = false
-        if reaper.JS_VKeys_GetState then
-            local state = reaper.JS_VKeys_GetState(-1)
-            alt_held = state:byte(18) == 1 -- VK_MENU (Alt)
-        end
-        if reaper.JS_Mouse_GetState then
-            mouse_down = reaper.JS_Mouse_GetState(1) == 1 -- Left mouse button
-        end
-        return alt_held, mouse_down
-    end
+     local function GetAltAndMouseState()
+         local alt_held = false
+         local mouse_down = false
+         if reaper.JS_VKeys_GetState then
+             local state = reaper.JS_VKeys_GetState(-1)
+             alt_held = state:byte(18) == 1 -- VK_MENU (Alt)
+         end
+         if reaper.JS_Mouse_GetState then
+             mouse_down = reaper.JS_Mouse_GetState(1) == 1 -- Left mouse button
+         end
+         return alt_held, mouse_down
+     end
 
-    local function CheckAndUpdate()
-        local sel_track_count = reaper.CountSelectedTracks(0)
+     local function CheckAndUpdate()
+         -- Check if manager script is running - if so, just refresh stored volumes and skip
+         if reaper.GetExtState("7R_SendScripts", "manager_running") == "true" then
+             track_sends = StoreSendVolumes()
+             reaper.defer(CheckAndUpdate)
+             return
+         end
 
-        if sel_track_count < 2 then
-            track_sends = StoreSendVolumes()
-            last_sel_count = sel_track_count
-            reaper.defer(CheckAndUpdate)
-            return
-        end
+         local sel_track_count = reaper.CountSelectedTracks(0)
+
+         if sel_track_count < 2 then
+             track_sends = StoreSendVolumes()
+             last_sel_count = sel_track_count
+             reaper.defer(CheckAndUpdate)
+             return
+         end
 
         if sel_track_count ~= last_sel_count then
             track_sends = StoreSendVolumes()
@@ -106,7 +118,7 @@ function Main()
             alt_latched = false
         end
 
-        -- Check for send volume changes across all sends
+        -- Check for send volume and pan changes across all sends
         local changes = {}
         for i = 0, sel_track_count - 1 do
             local track = reaper.GetSelectedTrack(0, i)
@@ -114,23 +126,30 @@ function Main()
             for j = 0, send_count - 1 do
                 local send_name, current_vol = GetSendInfo(track, j)
                 local current_vol_db = LinearToDB(current_vol)
-                if track_sends[track] and track_sends[track][send_name] and math.abs(track_sends[track][send_name] - current_vol_db) > 0.01 then
-                    local vol_change_db = current_vol_db - track_sends[track][send_name]
-                    table.insert(changes, {
-                        track = track,
-                        send_idx = j,
-                        send_name = send_name,
-                        vol_change_db = vol_change_db
-                    })
+                local current_pan = reaper.GetTrackSendInfo_Value(track, 0, j, "D_PAN")
+                if track_sends[track] and track_sends[track][send_name] then
+                    local stored = track_sends[track][send_name]
+                    local vol_changed = math.abs(stored.vol - current_vol_db) > 0.01
+                    local pan_changed = math.abs(stored.pan - current_pan) > 0.001
+                    if vol_changed or pan_changed then
+                        table.insert(changes, {
+                            track = track,
+                            send_idx = j,
+                            send_name = send_name,
+                            vol_change_db = vol_changed and (current_vol_db - stored.vol) or 0,
+                            pan_change = pan_changed and (current_pan - stored.pan) or 0
+                        })
+                    end
                 end
             end
         end
 
-        -- Apply volume changes to matching sends on other selected tracks
+        -- Apply volume and pan changes to matching sends on other selected tracks
         if #changes > 0 and not alt_latched then
             for _, change in ipairs(changes) do
                 local target_send_name = change.send_name
                 local vol_change_db = change.vol_change_db
+                local pan_change = change.pan_change
                 local changed_track = change.track
 
                 for i = 0, sel_track_count - 1 do
@@ -138,23 +157,33 @@ function Main()
                     if track ~= changed_track then
                         local has_send, send_idx = HasSendWithName(track, target_send_name)
                         if has_send then
-                            local current_vol = reaper.GetTrackSendInfo_Value(track, 0, send_idx, "D_VOL")
-                            local current_vol_db = LinearToDB(current_vol)
-                            local new_vol_db = current_vol_db + vol_change_db
-                            local new_vol = DBToLinear(new_vol_db)
-                            reaper.SetTrackSendInfo_Value(track, 0, send_idx, "D_VOL", new_vol)
+                            -- Apply volume change
+                            if vol_change_db ~= 0 then
+                                local current_vol = reaper.GetTrackSendInfo_Value(track, 0, send_idx, "D_VOL")
+                                local current_vol_db = LinearToDB(current_vol)
+                                local new_vol_db = current_vol_db + vol_change_db
+                                local new_vol = DBToLinear(new_vol_db)
+                                reaper.SetTrackSendInfo_Value(track, 0, send_idx, "D_VOL", new_vol)
+                            end
+                            -- Apply pan change
+                            if pan_change ~= 0 then
+                                local current_pan = reaper.GetTrackSendInfo_Value(track, 0, send_idx, "D_PAN")
+                                local new_pan = current_pan + pan_change
+                                reaper.SetTrackSendInfo_Value(track, 0, send_idx, "D_PAN", new_pan)
+                            end
                             -- Store change for undo consolidation
                             table.insert(changes_during_drag, {
                                 track = track,
                                 send_idx = send_idx,
                                 send_name = target_send_name,
-                                vol_change_db = vol_change_db
+                                vol_change_db = vol_change_db,
+                                pan_change = pan_change
                             })
                         end
                     end
                 end
             end
-            -- Update stored send volumes
+            -- Update stored send volumes and pan
             track_sends = StoreSendVolumes()
         end
 
