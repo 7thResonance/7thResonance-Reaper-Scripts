@@ -1,8 +1,8 @@
 --[[
 @description 7R FX Link (Relative)
 @author 7thResonance
-@version 1.01
-@changelog - Added bypass and offline state synchronization.
+@version 1.02
+@changelog - Affects FX based on FX instance position. (made this the default behavior)
 @donation https://paypal.me/7thresonance
 @about Links the same FX on selected track.
 
@@ -19,7 +19,7 @@ function Msg(string)
   reaper.ShowConsoleMsg(tostring(string).."\n")
 end
 
-only_first = false -- true or false: Set to true, Link The first FX of the same name. Set to false, Link all FX of the same name.
+only_first = true -- true or false: Set to true, Link The first FX of the same name. Set to false, Link all FX of the same name.
 
 -- 當前focused FX的信息
 focused_fx = {
@@ -114,6 +114,62 @@ function update_and_sync_params()
   end
 end
 
+function get_fx_instance_number(take, fx_idx, fx_name)
+  -- 計算同名FX在此位置之前有多少個，得到實例編號（1-based）
+  local instance = 1
+  for i = 0, fx_idx - 1 do
+    local _, name = reaper.TakeFX_GetFXName(take, i, '')
+    if name == fx_name then
+      instance = instance + 1
+    end
+  end
+  return instance
+end
+
+function get_track_fx_instance_number(track, fx_idx, fx_name)
+  -- 計算同名FX在此位置之前有多少個，得到實例編號（1-based）
+  local instance = 1
+  for i = 0, fx_idx - 1 do
+    local _, name = reaper.TrackFX_GetFXName(track, i, '')
+    if name == fx_name then
+      instance = instance + 1
+    end
+  end
+  return instance
+end
+
+function find_fx_instance_on_take(take, fx_name, target_instance)
+  -- 在take中找到第target_instance個同名FX的位置，返回其fx_idx
+  local instance = 0
+  local fx_count = reaper.TakeFX_GetCount(take)
+  for i = 0, fx_count - 1 do
+    local _, name = reaper.TakeFX_GetFXName(take, i, '')
+    if name == fx_name then
+      instance = instance + 1
+      if instance == target_instance then
+        return i
+      end
+    end
+  end
+  return -1  -- 未找到
+end
+
+function find_fx_instance_on_track(track, fx_name, target_instance)
+  -- 在track中找到第target_instance個同名FX的位置，返回其fx_idx
+  local instance = 0
+  local fx_count = reaper.TrackFX_GetCount(track)
+  for i = 0, fx_count - 1 do
+    local _, name = reaper.TrackFX_GetFXName(track, i, '')
+    if name == fx_name then
+      instance = instance + 1
+      if instance == target_instance then
+        return i
+      end
+    end
+  end
+  return -1  -- 未找到
+end
+
 function sync_item_fx_param(param_idx, delta)
   local source_track = reaper.GetTrack(0, focused_fx.track_idx)
   local source_item = reaper.GetTrackMediaItem(source_track, focused_fx.item_idx)
@@ -121,6 +177,9 @@ function sync_item_fx_param(param_idx, delta)
   
   -- 只有當source item被選中時才同步
   if not reaper.IsMediaItemSelected(source_item) then return end
+  
+  -- 計算source FX的實例編號
+  local source_instance = get_fx_instance_number(source_take, focused_fx.fx_idx, focused_fx.fx_name)
   
   local items_count = reaper.CountSelectedMediaItems(0)
   
@@ -130,22 +189,18 @@ function sync_item_fx_param(param_idx, delta)
     
     if not selected_take then goto continue_item end
     
-    for selected_fx_number = 0, reaper.TakeFX_GetCount(selected_take) - 1 do
-      local _, dest_fxname = reaper.TakeFX_GetFXName(selected_take, selected_fx_number, '')
-      
-      -- 跳過source FX本身，並檢查名稱匹配
-      if selected_take == source_take or dest_fxname ~= focused_fx.fx_name then goto continue_fx_item end
-      
-      -- 應用delta
-      local other_current_val = reaper.TakeFX_GetParam(selected_take, selected_fx_number, param_idx)
-      local new_val = other_current_val + delta
-      new_val = math.max(0, math.min(1, new_val))
-      reaper.TakeFX_SetParam(selected_take, selected_fx_number, param_idx, new_val)
-      
-      if only_first then break end
-      
-      ::continue_fx_item::
-    end
+    -- 跳過source item
+    if selected_take == source_take then goto continue_item end
+    
+    -- 在選中item上找到相同實例編號的FX
+    local target_fx_idx = find_fx_instance_on_take(selected_take, focused_fx.fx_name, source_instance)
+    if target_fx_idx < 0 then goto continue_item end
+    
+    -- 應用delta
+    local other_current_val = reaper.TakeFX_GetParam(selected_take, target_fx_idx, param_idx)
+    local new_val = other_current_val + delta
+    new_val = math.max(0, math.min(1, new_val))
+    reaper.TakeFX_SetParam(selected_take, target_fx_idx, param_idx, new_val)
     
     ::continue_item::
   end
@@ -230,7 +285,7 @@ function sync_fx_states()
         if old_state then
           if old_state.bypass ~= bypass or old_state.offline ~= offline then
             -- 狀態改變，同步到其他選中item上同名的FX
-            propagate_fx_state(fx_name, "item", bypass, offline)
+            propagate_fx_state_item(fx_name, bypass, offline, fx_idx, take)
           end
         end
       end
@@ -267,7 +322,7 @@ function sync_fx_states()
       if old_state then
         if old_state.bypass ~= bypass or old_state.offline ~= offline then
           -- 狀態改變，同步到其他選中track上同名的FX
-          propagate_fx_state(fx_name, "track", bypass, offline)
+          propagate_fx_state_track(fx_name, bypass, offline, fx_idx, track)
         end
       end
     end
@@ -318,44 +373,54 @@ function propagate_fx_deletion(fx_name, fx_type)
   end
 end
 
-function propagate_fx_state(fx_name, fx_type, bypass, offline)
-  if fx_type == "item" then
-    local items_count = reaper.CountSelectedMediaItems(0)
-    for i = 0, items_count - 1 do
-      local item = reaper.GetSelectedMediaItem(0, i)
-      local take = reaper.GetActiveTake(item)
-      if take then
-        local fx_count = reaper.TakeFX_GetCount(take)
-        for fx_idx = 0, fx_count - 1 do
-          local _, current_fx_name = reaper.TakeFX_GetFXName(take, fx_idx, '')
-          if current_fx_name == fx_name then
-            reaper.TakeFX_SetEnabled(take, fx_idx, bypass)
-            reaper.TakeFX_SetOffline(take, fx_idx, offline)
-            if only_first then break end
-          end
-        end
-      end
+function propagate_fx_state_item(fx_name, bypass, offline, source_fx_idx, source_take)
+  -- 計算source FX的實例編號
+  local source_instance = get_fx_instance_number(source_take, source_fx_idx, fx_name)
+  
+  local items_count = reaper.CountSelectedMediaItems(0)
+  for i = 0, items_count - 1 do
+    local item = reaper.GetSelectedMediaItem(0, i)
+    local take = reaper.GetActiveTake(item)
+    if take then
+      -- 跳過source item
+      if take == source_take then goto continue_item_state_outer end
+      
+      -- 在item上找到相同實例編號的FX
+      local target_fx_idx = find_fx_instance_on_take(take, fx_name, source_instance)
+      if target_fx_idx < 0 then goto continue_item_state_outer end
+      
+      reaper.TakeFX_SetEnabled(take, target_fx_idx, bypass)
+      reaper.TakeFX_SetOffline(take, target_fx_idx, offline)
+      
+      ::continue_item_state_outer::
     end
-  else
-    local tracks = {}
-    for i = 0, reaper.CountSelectedTracks(0) - 1 do
-      table.insert(tracks, reaper.GetSelectedTrack(0, i))
-    end
-    if reaper.IsTrackSelected(reaper.GetMasterTrack(0)) then
-      table.insert(tracks, reaper.GetMasterTrack(0))
-    end
+  end
+end
+
+function propagate_fx_state_track(fx_name, bypass, offline, source_fx_idx, source_track)
+  -- 計算source FX的實例編號
+  local source_instance = get_track_fx_instance_number(source_track, source_fx_idx, fx_name)
+  
+  local tracks = {}
+  for i = 0, reaper.CountSelectedTracks(0) - 1 do
+    table.insert(tracks, reaper.GetSelectedTrack(0, i))
+  end
+  if reaper.IsTrackSelected(reaper.GetMasterTrack(0)) then
+    table.insert(tracks, reaper.GetMasterTrack(0))
+  end
+  
+  for _, track in pairs(tracks) do
+    -- 跳過source track
+    if track == source_track then goto continue_track_state_outer end
     
-    for _, track in pairs(tracks) do
-      local fx_count = reaper.TrackFX_GetCount(track)
-      for fx_idx = 0, fx_count - 1 do
-        local _, current_fx_name = reaper.TrackFX_GetFXName(track, fx_idx, "")
-        if current_fx_name == fx_name then
-          reaper.TrackFX_SetEnabled(track, fx_idx, bypass)
-          reaper.TrackFX_SetOffline(track, fx_idx, offline)
-          if only_first then break end
-        end
-      end
-    end
+    -- 在track上找到相同實例編號的FX
+    local target_fx_idx = find_fx_instance_on_track(track, fx_name, source_instance)
+    if target_fx_idx < 0 then goto continue_track_state_outer end
+    
+    reaper.TrackFX_SetEnabled(track, target_fx_idx, bypass)
+    reaper.TrackFX_SetOffline(track, target_fx_idx, offline)
+    
+    ::continue_track_state_outer::
   end
 end
 
@@ -364,6 +429,9 @@ function sync_track_fx_param(param_idx, delta)
   
   -- 只有當source track被選中時才同步
   if not reaper.IsTrackSelected(source_track) then return end
+  
+  -- 計算source FX的實例編號
+  local source_instance = get_track_fx_instance_number(source_track, focused_fx.fx_idx, focused_fx.fx_name)
   
   local selected_tracks = {}
   for i = 0, reaper.CountSelectedTracks(0) - 1 do
@@ -375,22 +443,20 @@ function sync_track_fx_param(param_idx, delta)
   end
   
   for _, selected_track in pairs(selected_tracks) do
-    for selected_fx_number = 0, reaper.TrackFX_GetCount(selected_track) - 1 do
-      local _, dest_fxname = reaper.TrackFX_GetFXName(selected_track, selected_fx_number, "")
-      
-      -- 跳過source FX本身，並檢查名稱匹配
-      if selected_track == source_track or dest_fxname ~= focused_fx.fx_name then goto continue_fx_track end
-      
-      -- 應用delta
-      local other_current_val = reaper.TrackFX_GetParam(selected_track, selected_fx_number, param_idx)
-      local new_val = other_current_val + delta
-      new_val = math.max(0, math.min(1, new_val))
-      reaper.TrackFX_SetParam(selected_track, selected_fx_number, param_idx, new_val)
-      
-      if only_first then break end
-      
-      ::continue_fx_track::
-    end
+    -- 跳過source track
+    if selected_track == source_track then goto continue_track end
+    
+    -- 在選中track上找到相同實例編號的FX
+    local target_fx_idx = find_fx_instance_on_track(selected_track, focused_fx.fx_name, source_instance)
+    if target_fx_idx < 0 then goto continue_track end
+    
+    -- 應用delta
+    local other_current_val = reaper.TrackFX_GetParam(selected_track, target_fx_idx, param_idx)
+    local new_val = other_current_val + delta
+    new_val = math.max(0, math.min(1, new_val))
+    reaper.TrackFX_SetParam(selected_track, target_fx_idx, param_idx, new_val)
+    
+    ::continue_track::
   end
 end
 
