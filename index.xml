@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="7thResonance" commit="595a41972549c4c96ed3c59986ae4de9b1579cac">
+<index version="1" name="7thResonance" commit="33465f03a897c16472d4edad015ad130e77bc28d">
   <category name="Editing">
     <reapack name="7R Untrim Item to source Length (until other item edge).lua" type="script" desc="7R Untrim Item to source Length (until other item edge)">
       <metadata>
@@ -148,6 +148,11 @@
         <changelog><![CDATA[consoldidated undo points]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/6a0c2f351a7ee73061185626bde10dec93ce1c00/Track/7R%20Control%20Sends%20of%20Selected%20Track.lua</source>
       </version>
+      <version name="1.2" author="7thResonance" time="2025-11-14T09:33:55Z">
+        <changelog><![CDATA[added pause to work with the GUI send manager script
+- Added send pan control syncing]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance/raw/33465f03a897c16472d4edad015ad130e77bc28d/Track/7R%20Control%20Sends%20of%20Selected%20Track.lua</source>
+      </version>
     </reapack>
     <reapack name="7R Freeze Instruments to Stereo (Other FX Online).lua" type="script" desc="7R Freeze Instruments to Stereo (Other FX Online)">
       <metadata>
@@ -222,6 +227,10 @@
       <version name="1.0" author="7thResonance" time="2025-08-07T19:54:08Z">
         <changelog><![CDATA[- Initial]]></changelog>
         <source main="main">https://github.com/7thResonance/7thResonance-Reaper-Scripts/raw/b60d7c136710e1bf95568d948940c4a620ce260a/Utilities/7R%20FX%20Send%20Manager.lua</source>
+      </version>
+      <version name="1.1" author="7thResonance" time="2025-11-14T09:33:55Z">
+        <changelog><![CDATA[- Added pause to work with other background send scripts]]></changelog>
+        <source main="main">https://github.com/7thResonance/7thResonance/raw/33465f03a897c16472d4edad015ad130e77bc28d/Utilities/7R%20FX%20Send%20Manager.lua</source>
       </version>
     </reapack>
     <reapack name="7R Insert FX or Instruments or Track Template Under Mouse cursor (Track or Item, Master).lua" type="script" desc="7R Insert FX/Instruments/Track Template Under Mouse cursor (Track or Item, Master)">
